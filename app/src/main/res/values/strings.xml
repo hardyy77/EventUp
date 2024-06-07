@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">EventUp</string>
+    <string name="hello_world">Hello, World!</string>
+    <string name="eventup">Eventup</string>
+    <string name="g_wna">Główna</string>
+    <string name="szukaj">Szukaj</string>
+    <string name="ulubione">Ulubione</string>
+    <string name="profil">Profil</string>
+    <string name="default_fragment_title">Główna</string>
+    <string name="icon_description">Icon description</string>
+    <string name="główna">Główna</string>
+</resources>

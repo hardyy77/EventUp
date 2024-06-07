@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "243750083862",
+    "project_id": "eventup-e84b7",
+    "storage_bucket": "eventup-e84b7.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:243750083862:android:371d7eb13de634ca38c437",
+        "android_client_info": {
+          "package_name": "com.example.eventup"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBzEJQvLZzUhlno3E55YLnCA8eNW0cpgfQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
