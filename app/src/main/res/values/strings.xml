@@ -14,4 +14,5 @@
     <string name="event_date">Event Date</string>
     <string name="event_location">Event Location</string>
     <string name="event_name">Event Name</string>
+    <string name="ostatnio_dodane">Ostatnio dodane</string>
 </resources>

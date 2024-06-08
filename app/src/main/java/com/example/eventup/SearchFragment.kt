@@ -1,5 +1,6 @@
 package com.example.eventup
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -7,55 +8,32 @@ import android.view.ViewGroup
 import android.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.google.firebase.firestore.FirebaseFirestore
+import com.example.eventup.databinding.FragmentSearchBinding
+import com.google.gson.Gson
 
 class SearchFragment : Fragment() {
 
-    private lateinit var firestore: FirebaseFirestore
     private lateinit var eventsAdapter: EventsAdapter
-    private lateinit var allEvents: List<Event>  // List of all events
-    private lateinit var searchView: SearchView
+    private lateinit var allEvents: List<Event>
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val view = inflater.inflate(R.layout.fragment_search, container, false)
+        val binding = FragmentSearchBinding.inflate(inflater, container, false)
 
-        firestore = FirebaseFirestore.getInstance()
+        binding.eventsRecyclerView.layoutManager = LinearLayoutManager(context)
+        eventsAdapter = EventsAdapter { event -> navigateToEventDetails(event) }
+        binding.eventsRecyclerView.adapter = eventsAdapter
 
-        val recyclerView = view.findViewById<RecyclerView>(R.id.events_recycler_view)
-        recyclerView.layoutManager = LinearLayoutManager(context)
+        setupSearchView(binding.searchView)
 
-        eventsAdapter = EventsAdapter()
-        recyclerView.adapter = eventsAdapter
+        EventUtils.getAllEvents { events ->
+            allEvents = events
+            eventsAdapter.submitList(allEvents)
+        }
 
-        searchView = view.findViewById(R.id.search_view)
-        setupSearchView()
-
-        getEvents()
-
-        return view
+        return binding.root
     }
 
-    private fun getEvents() {
-        firestore.collection("events")
-            .get()
-            .addOnSuccessListener { result ->
-                allEvents = result.map { document ->
-                    Event(
-                        document.getString("name") ?: "",
-                        document.getString("location") ?: "",
-                        document.getString("date") ?: "",
-                        document.getString("genres") ?: ""
-                    )
-                }
-                eventsAdapter.submitList(allEvents)
-            }
-            .addOnFailureListener { exception ->
-                println("Error getting events: $exception")
-            }
-    }
-
-    private fun setupSearchView() {
+    private fun setupSearchView(searchView: SearchView) {
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 return false
@@ -69,12 +47,15 @@ class SearchFragment : Fragment() {
     }
 
     private fun filterEvents(query: String) {
-        val filteredEvents = allEvents.filter { event ->
-            event.name.contains(query, ignoreCase = true) ||
-                    event.location.contains(query, ignoreCase = true) ||
-                    event.date.contains(query, ignoreCase = true) ||
-                    event.genres.contains(query, ignoreCase = true)
-        }
+        val filteredEvents = EventUtils.filterEvents(allEvents, query)
         eventsAdapter.submitList(filteredEvents)
     }
+
+    private fun navigateToEventDetails(event: Event) {
+        val intent = Intent(context, EventDetailsActivity::class.java)
+        val eventJson = Gson().toJson(event)
+        intent.putExtra("event", eventJson)
+        startActivity(intent)
+    }
+
 }

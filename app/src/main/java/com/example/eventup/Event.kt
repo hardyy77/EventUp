@@ -5,6 +5,17 @@ data class Event(
     val location: String,
     val date: String,
     val genres: String,
-    val description: String = "",
-    val interest: Int = 0  // Domyślna wartość interest to 0
-)
+    val description: String,
+    val interest: Int
+) {
+    fun toMap(): Map<String, Any> {
+        return mapOf(
+            "name" to name,
+            "location" to location,
+            "date" to date,
+            "genres" to genres,
+            "description" to description,
+            "interest" to interest
+        )
+    }
+}
