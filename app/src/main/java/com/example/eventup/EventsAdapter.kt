@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
+
 class EventsAdapter : RecyclerView.Adapter<EventsAdapter.EventViewHolder>() {
 
     private var events: List<Event> = emptyList()

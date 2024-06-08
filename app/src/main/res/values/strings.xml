@@ -10,4 +10,8 @@
     <string name="icon_description">Icon description</string>
     <string name="główna">Główna</string>
     <string name="search_hint">Szukaj wydarzeń</string>
+    <string name="event_genres">Event Genres</string>
+    <string name="event_date">Event Date</string>
+    <string name="event_location">Event Location</string>
+    <string name="event_name">Event Name</string>
 </resources>

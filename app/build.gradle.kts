@@ -72,6 +72,8 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    implementation ("androidx.work:work-runtime-ktx:2.7.1")
+    implementation ("com.google.code.gson:gson:2.10.1")
 }
 
 apply(plugin = "com.google.gms.google-services") // Dodaj to na końcu pliku

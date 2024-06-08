@@ -4,8 +4,12 @@ import android.os.Bundle
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.firestore.FirebaseFirestore
+import java.util.Calendar
+import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
 
@@ -53,6 +57,26 @@ class MainActivity : AppCompatActivity() {
             fragmentTitle.text = getString(R.string.default_fragment_title)
             bottomNavigation.selectedItemId = R.id.navigation_home
         }
+
+        // Planowanie zadania aktualizacji wydarzeń o 7 rano codziennie
+        val updateRequest = PeriodicWorkRequestBuilder<UpdateInterestingEventsWorker>(24, TimeUnit.HOURS)
+            .setInitialDelay(calculateInitialDelay(), TimeUnit.MILLISECONDS)
+            .build()
+
+        WorkManager.getInstance(this).enqueue(updateRequest)
+    }
+
+    private fun calculateInitialDelay(): Long {
+        val now = Calendar.getInstance()
+        val targetTime = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 7)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+        }
+        if (now.after(targetTime)) {
+            targetTime.add(Calendar.DAY_OF_MONTH, 1)
+        }
+        return targetTime.timeInMillis - now.timeInMillis
     }
 
     // Przykładowa funkcja zapisywania danych do Firestore
