@@ -1,10 +1,14 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Base application theme. -->
+
+    <!-- Base application theme -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
-        <!-- Customize your theme here. -->
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
+        <!-- Customize your theme here -->
+        <item name="colorPrimary">@color/discord_blue</item>
+        <item name="colorPrimaryDark">@color/discord_dark</item>
+        <item name="colorAccent">@color/discord_light_blue</item>
+        <item name="android:windowBackground">@color/discord_very_dark</item>
+        <item name="android:textColorPrimary">@color/white</item>
+        <item name="android:textColorSecondary">@color/discord_light_blue</item>
     </style>
+
 </resources>

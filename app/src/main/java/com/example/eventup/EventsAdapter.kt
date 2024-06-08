@@ -6,8 +6,6 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
-data class Event(val name: String, val location: String, val date: String)
-
 class EventsAdapter : RecyclerView.Adapter<EventsAdapter.EventViewHolder>() {
 
     private var events: List<Event> = emptyList()
@@ -34,11 +32,13 @@ class EventsAdapter : RecyclerView.Adapter<EventsAdapter.EventViewHolder>() {
         private val titleTextView: TextView = itemView.findViewById(R.id.event_title)
         private val dateTextView: TextView = itemView.findViewById(R.id.event_date)
         private val locationTextView: TextView = itemView.findViewById(R.id.event_location)
+        private val genresTextView: TextView = itemView.findViewById(R.id.event_genres)
 
         fun bind(event: Event) {
             titleTextView.text = event.name
             dateTextView.text = event.date
             locationTextView.text = event.location
+            genresTextView.text = event.genres
         }
     }
 }

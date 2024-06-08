@@ -38,7 +38,8 @@ class HomeFragment : Fragment() {
                     Event(
                         document.getString("name") ?: "",
                         document.getString("location") ?: "",
-                        document.getString("date") ?: ""
+                        document.getString("date") ?: "",
+                        document.getString("genres") ?: ""  // Dodane pole genres
                     )
                 }
                 eventsAdapter.submitList(events)
