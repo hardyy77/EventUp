@@ -40,4 +40,13 @@
         android:text="@string/event_genres"
         android:textSize="14sp"
         android:textColor="@color/discord_light_blue" />
+
+    <ImageView
+        android:id="@+id/iv_favorite"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_favorite_border"
+        android:contentDescription="@string/favorite"
+        android:layout_gravity="end" />
+
 </LinearLayout>

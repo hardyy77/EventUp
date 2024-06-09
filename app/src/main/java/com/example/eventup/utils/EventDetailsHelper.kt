@@ -1,7 +1,9 @@
-package com.example.eventup
+package com.example.eventup.utils
 
 import android.content.Context
 import android.content.Intent
+import com.example.eventup.activities.EventDetailsActivity
+import com.example.eventup.models.Event
 
 object EventDetailsHelper {
     fun openEventDetails(context: Context, event: Event) {

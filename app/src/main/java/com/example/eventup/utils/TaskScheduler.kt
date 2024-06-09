@@ -1,8 +1,9 @@
-package com.example.eventup
+package com.example.eventup.utils
 
 import android.content.Context
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import com.example.eventup.workers.UpdateInterestingEventsWorker
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 

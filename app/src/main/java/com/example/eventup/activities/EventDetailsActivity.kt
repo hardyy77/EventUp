@@ -1,15 +1,18 @@
-package com.example.eventup
+package com.example.eventup.activities
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.example.eventup.databinding.ActivityEventDetailsBinding
+import com.example.eventup.models.Event
 import com.google.gson.Gson
 
 class EventDetailsActivity : AppCompatActivity() {
 
+    private lateinit var binding: ActivityEventDetailsBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val binding = ActivityEventDetailsBinding.inflate(layoutInflater)
+        binding = ActivityEventDetailsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         val eventJson = intent.getStringExtra("event")

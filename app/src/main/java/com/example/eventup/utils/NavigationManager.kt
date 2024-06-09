@@ -1,8 +1,13 @@
-package com.example.eventup
+package com.example.eventup.utils
 
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
+import com.example.eventup.R
+import com.example.eventup.fragments.FavoritesFragment
+import com.example.eventup.fragments.HomeFragment
+import com.example.eventup.fragments.ProfileFragment
+import com.example.eventup.fragments.SearchFragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
 object NavigationManager {

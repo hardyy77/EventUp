@@ -1,4 +1,4 @@
-package com.example.eventup
+package com.example.eventup.fragments
 
 import android.content.Intent
 import android.os.Bundle
@@ -8,6 +8,11 @@ import android.view.ViewGroup
 import android.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.eventup.models.Event
+import com.example.eventup.utils.EventUtils
+import com.example.eventup.utils.FirestoreUtils
+import com.example.eventup.activities.EventDetailsActivity
+import com.example.eventup.adapters.EventsAdapter
 import com.example.eventup.databinding.FragmentSearchBinding
 import com.google.gson.Gson
 
@@ -20,7 +25,11 @@ class SearchFragment : Fragment() {
         val binding = FragmentSearchBinding.inflate(inflater, container, false)
 
         binding.eventsRecyclerView.layoutManager = LinearLayoutManager(context)
-        eventsAdapter = EventsAdapter { event -> navigateToEventDetails(event) }
+        eventsAdapter = EventsAdapter({ event ->
+            navigateToEventDetails(event)
+        }, { event ->
+            toggleFavorite(event)
+        })
         binding.eventsRecyclerView.adapter = eventsAdapter
 
         setupSearchView(binding.searchView)
@@ -28,6 +37,7 @@ class SearchFragment : Fragment() {
         EventUtils.getAllEvents { events ->
             allEvents = events
             eventsAdapter.submitList(allEvents)
+            events.forEach { event -> println("Fetched event in SearchFragment: ${event.id}") }
         }
 
         return binding.root
@@ -48,14 +58,38 @@ class SearchFragment : Fragment() {
 
     private fun filterEvents(query: String) {
         val filteredEvents = EventUtils.filterEvents(allEvents, query)
+        println("Filtering events with query: $query, found ${filteredEvents.size} events")
         eventsAdapter.submitList(filteredEvents)
     }
 
     private fun navigateToEventDetails(event: Event) {
+        println("Navigating to event details for event: ${event.id}")
         val intent = Intent(context, EventDetailsActivity::class.java)
         val eventJson = Gson().toJson(event)
         intent.putExtra("event", eventJson)
         startActivity(intent)
     }
 
+    private fun toggleFavorite(event: Event) {
+        println("Toggling favorite for event: ${event.id} (isFavorite: ${event.isFavorite})")
+        if (event.isFavorite) {
+            FirestoreUtils.removeEventFromFavorites(event, {
+                event.isFavorite = false
+                println("Removed event from favorites: ${event.id}")
+                eventsAdapter.notifyDataSetChanged()
+            }, { e ->
+                println("Failed to remove event from favorites: ${e.message}")
+                e.printStackTrace()
+            })
+        } else {
+            FirestoreUtils.addEventToFavorites(event, {
+                event.isFavorite = true
+                println("Added event to favorites: ${event.id}")
+                eventsAdapter.notifyDataSetChanged()
+            }, { e ->
+                println("Failed to add event to favorites: ${e.message}")
+                e.printStackTrace()
+            })
+        }
+    }
 }

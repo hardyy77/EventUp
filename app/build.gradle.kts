@@ -63,8 +63,9 @@ dependencies {
     implementation(libs.androidx.recyclerview)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
-    implementation("com.google.firebase:firebase-firestore-ktx:23.0.3") // Użyj stabilnej wersji
-    implementation("com.google.firebase:firebase-analytics-ktx:21.2.1") // Użyj stabilnej wersji
+    implementation("com.google.firebase:firebase-firestore-ktx:25.0.0") // Użyj stabilnej wersji
+    implementation("com.google.firebase:firebase-analytics-ktx:21.2.1")
+    implementation(libs.firebase.auth.ktx) // Użyj stabilnej wersji
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

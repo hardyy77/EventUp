@@ -1,9 +1,11 @@
-package com.example.eventup
+package com.example.eventup.activities
 
 import android.os.Bundle
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.work.WorkManager
+import com.example.eventup.utils.NavigationManager
+import com.example.eventup.R
+import com.example.eventup.utils.TaskScheduler
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -20,7 +22,11 @@ class MainActivity : AppCompatActivity() {
         val fragmentTitle = findViewById<TextView>(R.id.fragment_title)
         val bottomNavigation = findViewById<BottomNavigationView>(R.id.bottom_navigation)
 
-        NavigationManager.setupBottomNavigation(supportFragmentManager, bottomNavigation, fragmentTitle)
+        NavigationManager.setupBottomNavigation(
+            supportFragmentManager,
+            bottomNavigation,
+            fragmentTitle
+        )
         TaskScheduler.scheduleDailyTask(this)
     }
 }

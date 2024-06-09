@@ -1,8 +1,9 @@
-package com.example.eventup
+package com.example.eventup.workers
 
 import android.content.Context
 import androidx.work.Worker
 import androidx.work.WorkerParameters
+import com.example.eventup.models.Event
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.gson.Gson
 import java.text.SimpleDateFormat
@@ -21,12 +22,14 @@ class UpdateInterestingEventsWorker(appContext: Context, workerParams: WorkerPar
             .addOnSuccessListener { result ->
                 val events = result.map { document ->
                     Event(
-                        document.getString("name") ?: "",
-                        document.getString("location") ?: "",
-                        document.getString("date") ?: "",
-                        document.getString("genres") ?: "",
-                        document.getString("description") ?: "",
-                        document.getLong("interest")?.toInt() ?: 0
+                        id = document.id,
+                        name = document.getString("name") ?: "",
+                        location = document.getString("location") ?: "",
+                        date = document.getString("date") ?: "",
+                        genres = document.getString("genres") ?: "",
+                        description = document.getString("description") ?: "",
+                        interest = document.getLong("interest")?.toInt() ?: 0,
+                        isFavorite = document.getBoolean("isFavorite") ?: false
                     )
                 }
                 val selectedEvents = events.shuffled().take(4)
