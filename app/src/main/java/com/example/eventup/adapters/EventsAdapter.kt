@@ -48,7 +48,6 @@ class EventsAdapter(private val onClick: (Event) -> Unit, private val onFavorite
             }
             favoriteImageView.setOnClickListener {
                 currentEvent?.let {
-                    it.isFavorite = !it.isFavorite
                     onFavoriteClick(it)
                     updateFavoriteIcon(it.isFavorite)
                 }
@@ -66,7 +65,7 @@ class EventsAdapter(private val onClick: (Event) -> Unit, private val onFavorite
         }
 
         private fun updateFavoriteIcon(isFavorite: Boolean) {
-            favoriteImageView.setImageResource(if (isFavorite) R.drawable.ic_favorite_border else R.drawable.ic_favorite_border)
+            favoriteImageView.setImageResource(if (isFavorite) R.drawable.ic_filled_heart else R.drawable.ic_outline_heart)
         }
     }
 }

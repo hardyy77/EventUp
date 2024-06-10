@@ -36,8 +36,11 @@ class SearchFragment : Fragment() {
 
         EventUtils.getAllEvents { events ->
             allEvents = events
-            eventsAdapter.submitList(allEvents)
-            events.forEach { event -> println("Fetched event in SearchFragment: ${event.id}") }
+            FirestoreUtils.syncFavorites(allEvents, {
+                eventsAdapter.submitList(allEvents)
+            }, {
+                // Obsłuż błąd
+            })
         }
 
         return binding.root

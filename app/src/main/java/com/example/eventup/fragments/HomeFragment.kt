@@ -34,13 +34,19 @@ class HomeFragment : Fragment() {
         binding.popularRecyclerView.adapter = popularEventsAdapter
 
         EventUtils.getInterestingEvents(requireContext()) { events ->
-            events.forEach { event -> println("Interesting event ID: ${event.id}") }
-            interestingEventsAdapter.submitList(events)
+            FirestoreUtils.syncFavorites(events, {
+                interestingEventsAdapter.submitList(events)
+            }, {
+                // Obsłuż błąd
+            })
         }
 
         EventUtils.getPopularEvents { events ->
-            events.forEach { event -> println("Popular event ID: ${event.id}") }
-            popularEventsAdapter.submitList(events)
+            FirestoreUtils.syncFavorites(events, {
+                popularEventsAdapter.submitList(events)
+            }, {
+                // Obsłuż błąd
+            })
         }
 
         return binding.root
@@ -54,11 +60,9 @@ class HomeFragment : Fragment() {
     }
 
     private fun toggleFavorite(event: Event) {
-        println("Toggling favorite for event: ${event.id} (isFavorite: ${event.isFavorite})")
         if (event.isFavorite) {
             FirestoreUtils.removeEventFromFavorites(event, {
                 event.isFavorite = false
-                println("Removed event from favorites: ${event.id}")
                 updateUI()
             }, { e ->
                 println("Failed to remove event from favorites: ${e.message}")
@@ -67,7 +71,6 @@ class HomeFragment : Fragment() {
         } else {
             FirestoreUtils.addEventToFavorites(event, {
                 event.isFavorite = true
-                println("Added event to favorites: ${event.id}")
                 updateUI()
             }, { e ->
                 println("Failed to add event to favorites: ${e.message}")

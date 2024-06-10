@@ -1,5 +1,6 @@
 package com.example.eventup.fragments
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -11,6 +12,7 @@ import com.example.eventup.models.Event
 import com.example.eventup.utils.FirestoreUtils
 import com.example.eventup.adapters.EventsAdapter
 import com.example.eventup.databinding.FragmentFavoritesBinding
+import com.example.eventup.activities.EventDetailsActivity
 import com.google.firebase.auth.FirebaseAuth
 
 class FavoritesFragment : Fragment() {
@@ -35,7 +37,7 @@ class FavoritesFragment : Fragment() {
             loginPrompt.visibility = View.GONE
             recyclerView.layoutManager = LinearLayoutManager(context)
             eventAdapter = EventsAdapter({ event ->
-                // Obsługa kliknięcia na wydarzenie
+                navigateToEventDetails(event)
             }, { event ->
                 toggleFavorite(event)
             })
@@ -57,22 +59,36 @@ class FavoritesFragment : Fragment() {
     }
 
     private fun toggleFavorite(event: Event) {
-        if (event.isFavorite) {
+        println("Toggling favorite for event: ${event.id} (isFavorite: ${event.isFavorite})")
+        val isCurrentlyFavorite = event.isFavorite
+        event.isFavorite = !isCurrentlyFavorite
+
+        if (isCurrentlyFavorite) {
             FirestoreUtils.removeEventFromFavorites(event, {
-                // Success handler
-                event.isFavorite = false
+                println("Successfully removed event from favorites: ${event.id}")
                 eventAdapter.notifyDataSetChanged()
             }, { e ->
-                // Failure handler
+                println("Failed to remove event from favorites: ${e.message}")
+                // Revert the change if the operation fails
+                event.isFavorite = isCurrentlyFavorite
+                eventAdapter.notifyDataSetChanged()
             })
         } else {
             FirestoreUtils.addEventToFavorites(event, {
-                // Success handler
-                event.isFavorite = true
+                println("Successfully added event to favorites: ${event.id}")
                 eventAdapter.notifyDataSetChanged()
             }, { e ->
-                // Failure handler
+                println("Failed to add event to favorites: ${e.message}")
+                // Revert the change if the operation fails
+                event.isFavorite = isCurrentlyFavorite
+                eventAdapter.notifyDataSetChanged()
             })
         }
+    }
+
+    private fun navigateToEventDetails(event: Event) {
+        val intent = Intent(context, EventDetailsActivity::class.java)
+        intent.putExtra("event", event)
+        startActivity(intent)
     }
 }

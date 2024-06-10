@@ -1,41 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
-    <!-- res/layout/fragment_profile.xml -->
-    <LinearLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_height="match_parent"
+    android:background="@color/discord_very_dark"
+    tools:context=".fragments.ProfileFragment">
+
+    <TextView
+        android:id="@+id/userEmailTextView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:visibility="gone"
+        android:textSize="16sp"
+        android:textColor="@color/white"
+        android:padding="16dp"
+        android:background="@drawable/card_background"/>
 
-        <EditText
-            android:id="@+id/emailField"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/email" />
+    <TextView
+        android:id="@+id/userUidTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/userEmailTextView"
+        android:layout_marginTop="8dp"
+        android:visibility="gone"
+        android:textSize="16sp"
+        android:textColor="@color/white"
+        android:padding="16dp"
+        android:background="@drawable/card_background"/>
 
-        <EditText
-            android:id="@+id/passwordField"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/password"
-            android:inputType="textPassword" />
-
-        <Button
-            android:id="@+id/loginButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/login" />
-
-        <TextView
-            android:id="@+id/signUpLink"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/sign_up_link"
-            android:textColor="@color/discord_light_blue"
-            android:layout_marginTop="16dp" />
-    </LinearLayout>
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <Button
+        android:id="@+id/loginLogoutButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/userUidTextView"
+        android:layout_marginTop="16dp"
+        android:textColor="@color/white"
+        android:background="@drawable/button_background"
+        android:text="Login"/>
+</RelativeLayout>

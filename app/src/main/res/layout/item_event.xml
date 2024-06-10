@@ -45,7 +45,7 @@
         android:id="@+id/iv_favorite"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/ic_favorite_border"
+        android:src="@drawable/ic_outline_heart"
         android:contentDescription="@string/favorite"
         android:layout_gravity="end" />
 

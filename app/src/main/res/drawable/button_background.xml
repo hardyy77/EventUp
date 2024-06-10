@@ -1,0 +1,5 @@
+<!-- app/src/main/res/drawable/button_background.xml -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true" android:drawable="@color/discord_dark" />
+    <item android:drawable="@color/discord_blue" />
+</selector>

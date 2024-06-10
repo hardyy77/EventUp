@@ -49,7 +49,7 @@ object FirestoreUtils {
             val eventRef = firestore.collection("users").document(currentUser.uid).collection("favorites").document(event.id)
             eventRef.set(event.toMap())
                 .addOnSuccessListener {
-                    println("Successfully added event to favorites: ${event.id}")
+                    println("Successfully added event to favorites in Firestore: ${event.id}")
                     event.interest += 1
                     updateEventInterest(event)
                     onSuccess()
@@ -67,7 +67,7 @@ object FirestoreUtils {
             val eventRef = firestore.collection("users").document(currentUser.uid).collection("favorites").document(event.id)
             eventRef.delete()
                 .addOnSuccessListener {
-                    println("Successfully removed event from favorites: ${event.id}")
+                    println("Successfully removed event from favorites in Firestore: ${event.id}")
                     event.interest -= 1
                     updateEventInterest(event)
                     onSuccess()
@@ -99,5 +99,28 @@ object FirestoreUtils {
     private fun updateEventInterest(event: Event) {
         val firestore = FirebaseFirestore.getInstance()
         firestore.collection("events").document(event.id).update("interest", event.interest)
+            .addOnSuccessListener {
+                println("Successfully updated event interest in Firestore: ${event.id}")
+            }
+            .addOnFailureListener { e ->
+                println("Failed to update event interest in Firestore: ${e.message}")
+            }
+    }
+
+    fun syncFavorites(events: List<Event>, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        if (currentUser != null) {
+            val firestore = FirebaseFirestore.getInstance()
+            firestore.collection("users").document(currentUser.uid).collection("favorites")
+                .get()
+                .addOnSuccessListener { documents ->
+                    val favoriteEventIds = documents.map { it.id }
+                    events.forEach { it.isFavorite = favoriteEventIds.contains(it.id) }
+                    onSuccess()
+                }
+                .addOnFailureListener { e -> onFailure(e) }
+        } else {
+            onFailure(IllegalArgumentException("Invalid user ID"))
+        }
     }
 }
