@@ -108,6 +108,10 @@ class ProfileFragment : Fragment() {
             loginLogoutButton.text = "Login"
             loginLogoutButton.visibility = View.VISIBLE
             addEventButton.visibility = View.GONE
+            loginLogoutButton.setOnClickListener {
+                val intent = Intent(activity, LoginActivity::class.java)
+                loginActivityResultLauncher.launch(intent)
+            }
         }
     }
 
