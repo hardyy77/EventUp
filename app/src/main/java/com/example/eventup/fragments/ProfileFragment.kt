@@ -1,7 +1,11 @@
 package com.example.eventup.fragments
 
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -29,6 +33,7 @@ class ProfileFragment : Fragment() {
     private lateinit var addEventButton: Button
     private lateinit var loginActivityResultLauncher: ActivityResultLauncher<Intent>
     private var currentUser: User? = null
+    private lateinit var loginReceiver: BroadcastReceiver
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -67,8 +72,24 @@ class ProfileFragment : Fragment() {
         return view
     }
 
+    override fun onStart() {
+        super.onStart()
+        loginReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                checkIfUserLoggedIn()
+            }
+        }
+        activity?.registerReceiver(loginReceiver, IntentFilter("com.example.eventup.LOGIN_SUCCESS"))
+    }
+
+    override fun onStop() {
+        super.onStop()
+        activity?.unregisterReceiver(loginReceiver)
+    }
+
     private fun checkIfUserLoggedIn() {
         currentUser = UserUtils.getCurrentUser()
+        Log.d("ProfileFragment", "Check if user logged in: $currentUser")
         updateUI(currentUser)
     }
 
@@ -92,7 +113,7 @@ class ProfileFragment : Fragment() {
 
     private fun fetchUserRole(userId: Int) {
         CoroutineScope(Dispatchers.Main).launch {
-            val query = "SELECT role FROM users WHERE id = $userId"
+            val query = "SELECT role FROM users WHERE uid = $userId"
             val resultSet = withContext(Dispatchers.IO) {
                 DatabaseHandler.executeQuery(query)
             }

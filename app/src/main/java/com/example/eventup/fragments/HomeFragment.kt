@@ -27,6 +27,7 @@ import com.example.eventup.models.Event
 import com.example.eventup.utils.DatabaseHandler
 import com.example.eventup.utils.EventUtils
 import com.example.eventup.utils.FavoritesRepository
+import com.example.eventup.utils.UserUtils
 import com.example.eventup.workers.UpdateInterestingEventsWorker
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
@@ -42,7 +43,7 @@ class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
     private var isReceiverRegistered = false
-    private val userId = "<USER_ID>" // Replace with actual user ID retrieval logic
+    private val currentUser = UserUtils.getCurrentUser()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
@@ -175,7 +176,9 @@ class HomeFragment : Fragment() {
         if (event.isFavorite) {
             lifecycleScope.launch {
                 try {
-                    FavoritesRepository.removeEventFromFavorites(event, userId!!)
+                    FavoritesRepository.removeEventFromFavorites(event,
+                        currentUser!!.id!!.toString()
+                    )
                     event.isFavorite = false
                     adapter.notifyItemChanged(position)
                     println("Removed event from favorites: ${event.id}")
@@ -187,7 +190,7 @@ class HomeFragment : Fragment() {
         } else {
             lifecycleScope.launch {
                 try {
-                    FavoritesRepository.addEventToFavorites(event, userId!!)
+                    FavoritesRepository.addEventToFavorites(event, currentUser!!.id!!.toString())
                     event.isFavorite = true
                     adapter.notifyItemChanged(position)
                     println("Added event to favorites: ${event.id}")

@@ -11,7 +11,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.eventup.R
 import com.example.eventup.models.Event
 import com.example.eventup.utils.EventUtils
-import com.example.eventup.utils.DatabaseHandler
+import com.example.eventup.utils.UserUtils
 
 class EventsAdapter(
     private val onClick: (Event) -> Unit,
@@ -21,6 +21,7 @@ class EventsAdapter(
 ) : RecyclerView.Adapter<EventsAdapter.EventViewHolder>() {
 
     var events: List<Event> = emptyList()
+    private val currentUser = UserUtils.getCurrentUser()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): EventViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_event, parent, false)
@@ -96,7 +97,11 @@ class EventsAdapter(
         }
 
         private fun checkUserAuthorization() {
-            // Implement logic to check user authorization if needed
+            if (currentUser?.role == "admin") {
+                optionsImageView.visibility = View.VISIBLE
+            } else {
+                optionsImageView.visibility = View.GONE
+            }
         }
 
         private fun showPopupMenu(view: View, event: Event) {

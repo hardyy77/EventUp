@@ -1,6 +1,7 @@
 package com.example.eventup.activities
 
 import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
@@ -8,7 +9,9 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.eventup.R
+import com.example.eventup.models.User
 import com.example.eventup.utils.DatabaseHandler
+import com.example.eventup.utils.UserUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -41,64 +44,64 @@ class LoginActivity : AppCompatActivity() {
         signUpButton.setOnClickListener {
             val email = emailField.text.toString()
             val password = passwordField.text.toString()
-            Log.d("LoginActivity", "Sign-up button clicked with email: $email")
             registerUser(email, password)
         }
     }
 
     private fun loginUser(email: String, password: String) {
-        Log.d("LoginActivity", "Attempting to login user with email: $email")
         CoroutineScope(Dispatchers.Main).launch {
+            Log.d("LoginActivity", "Attempting to login user with email: $email")
             val hashedPassword = hashPassword(password)
             Log.d("LoginActivity", "Hashed password: $hashedPassword")
             val isValidUser = withContext(Dispatchers.IO) {
-                Log.d("LoginActivity", "Verifying user in database")
                 DatabaseHandler.verifyUser(email, hashedPassword)
             }
             if (isValidUser) {
-                Log.d("LoginActivity", "Login successful for email: $email")
-                // Login successful
-                setResult(Activity.RESULT_OK)
-                finish()
+                setCurrentUser(email)
             } else {
                 Log.d("LoginActivity", "Login failed for email: $email")
-                // Login failed
                 setResult(Activity.RESULT_CANCELED)
                 Toast.makeText(this@LoginActivity, "Login failed", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    private fun registerUser(email: String, password: String) {
-        Log.d("LoginActivity", "Attempting to register user with email: $email")
+    private fun setCurrentUser(email: String) {
         CoroutineScope(Dispatchers.Main).launch {
-            val hashedPassword = hashPassword(password)
-            Log.d("LoginActivity", "Hashed password: $hashedPassword")
-            val query = "INSERT INTO users (email, password) VALUES ('$email', '$hashedPassword')"
-            val result = withContext(Dispatchers.IO) {
-                Log.d("LoginActivity", "Executing query: $query")
-                DatabaseHandler.executeUpdate(query)
+            val user = withContext(Dispatchers.IO) {
+                DatabaseHandler.getUserByEmail(email)
             }
-            if (result > 0) {
-                Log.d("LoginActivity", "Registration successful for email: $email")
-                // Registration successful
+            if (user != null) {
+                UserUtils.setCurrentUser(user)
+                Log.d("LoginActivity", "Current user set: ${user.email} with role ${user.role}")
+                sendBroadcast(Intent("com.example.eventup.LOGIN_SUCCESS"))
                 setResult(Activity.RESULT_OK)
                 finish()
             } else {
-                Log.d("LoginActivity", "Registration failed for email: $email")
-                // Registration failed
-                setResult(Activity.RESULT_CANCELED)
+                Log.e("LoginActivity", "Failed to set current user")
+            }
+        }
+    }
+
+    private fun registerUser(email: String, password: String) {
+        CoroutineScope(Dispatchers.Main).launch {
+            val hashedPassword = hashPassword(password)
+            val query = "INSERT INTO users (email, password) VALUES ('$email', '$hashedPassword')"
+            val result = withContext(Dispatchers.IO) {
+                DatabaseHandler.executeUpdate(query)
+            }
+            if (result > 0) {
+                Toast.makeText(this@LoginActivity, "Registration successful", Toast.LENGTH_SHORT).show()
+                loginUser(email, password) // Automatically log in after registration
+            } else {
                 Toast.makeText(this@LoginActivity, "Registration failed", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
     private fun hashPassword(password: String): String {
-        Log.d("LoginActivity", "Hashing password")
         val md = MessageDigest.getInstance("SHA-256")
         val digest = md.digest(password.toByteArray())
-        val hashedPassword = digest.fold("", { str, it -> str + "%02x".format(it) })
-        Log.d("LoginActivity", "Hashed password: $hashedPassword")
-        return hashedPassword
+        return digest.fold("", { str, it -> str + "%02x".format(it) })
     }
 }

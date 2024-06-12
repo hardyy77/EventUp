@@ -1,7 +1,9 @@
 package com.example.eventup.activities
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
@@ -14,6 +16,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.security.MessageDigest
 
 class ManageEventActivity : AppCompatActivity() {
 
@@ -39,7 +42,7 @@ class ManageEventActivity : AppCompatActivity() {
         saveButton = findViewById(R.id.saveButton)
         deleteButton = findViewById(R.id.deleteButton)
 
-        eventId = intent.getStringExtra("EVENT_ID")
+        eventId = intent.getStringExtra("EVENT_ID") // Changed from getIntExtra to getStringExtra
 
         if (eventId != null) {
             loadEvent(eventId!!)
