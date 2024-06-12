@@ -38,4 +38,15 @@
         android:textColor="@color/white"
         android:background="@drawable/button_background"
         android:text="Login"/>
+
+    <Button
+        android:id="@+id/addEventButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/loginLogoutButton"
+        android:layout_marginTop="16dp"
+        android:textColor="@color/white"
+        android:background="@drawable/button_background"
+        android:text="Add Event"
+        android:visibility="gone"/>
 </RelativeLayout>

@@ -56,7 +56,8 @@
             android:clipToPadding="false"
             android:paddingEnd="8dp"
             android:paddingStart="8dp"
-            android:clipChildren="false" />
+            android:clipChildren="false"
+            android:minHeight="565sp"/>
 
         <TextView
             android:id="@+id/newest_label"

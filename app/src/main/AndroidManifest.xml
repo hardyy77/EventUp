@@ -1,6 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.eventup">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:name=".EventupApp"
         android:allowBackup="true"
@@ -19,6 +21,7 @@
         </activity>
         <activity android:name=".activities.EventDetailsActivity" />
         <activity android:name=".activities.LoginActivity" />
+        <activity android:name=".activities.ManageEventActivity"/>
     </application>
 
 </manifest>

@@ -2,7 +2,6 @@ package com.example.eventup.models
 
 import android.os.Parcel
 import android.os.Parcelable
-import com.google.firebase.firestore.PropertyName
 
 data class Event(
     var id: String = "", // Ensure id is a var and has a default value
@@ -12,7 +11,7 @@ data class Event(
     val genres: String = "",
     val description: String = "",
     var interest: Int = 0,
-    @get:PropertyName("isFavorite") @set:PropertyName("isFavorite") var isFavorite: Boolean = false
+    var isFavorite: Boolean = false
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readString() ?: "",

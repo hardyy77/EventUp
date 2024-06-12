@@ -63,8 +63,6 @@ dependencies {
     implementation(libs.androidx.recyclerview)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
-    implementation("com.google.firebase:firebase-firestore-ktx:25.0.0") // Użyj stabilnej wersji
-    implementation("com.google.firebase:firebase-analytics-ktx:21.2.1")
     implementation(libs.firebase.auth.ktx) // Użyj stabilnej wersji
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -73,8 +71,11 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2")
     implementation ("androidx.work:work-runtime-ktx:2.7.1")
     implementation ("com.google.code.gson:gson:2.10.1")
+    implementation("mysql:mysql-connector-java:5.1.49")
 }
 
-apply(plugin = "com.google.gms.google-services") // Dodaj to na końcu pliku
+apply(plugin = "com.google.gms.google-services")

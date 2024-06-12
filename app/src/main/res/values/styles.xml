@@ -9,6 +9,7 @@
         <item name="android:windowBackground">@color/discord_very_dark</item>
         <item name="android:textColorPrimary">@color/white</item>
         <item name="android:textColorSecondary">@color/discord_light_blue</item>
+        <item name="android:textColor">@color/darkAccentColor</item>
     </style>
 
 </resources>

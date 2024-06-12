@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -41,12 +40,29 @@
         android:textSize="14sp"
         android:textColor="@color/discord_light_blue" />
 
-    <ImageView
-        android:id="@+id/iv_favorite"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:src="@drawable/ic_outline_heart"
-        android:contentDescription="@string/favorite"
-        android:layout_gravity="end" />
+        android:orientation="horizontal"
+        android:gravity="end">
+
+        <ImageView
+            android:id="@+id/iv_favorite"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_outline_heart"
+            android:contentDescription="@string/favorite"
+            android:layout_gravity="end"
+            android:layout_marginEnd="8dp" />
+
+        <ImageView
+            android:id="@+id/iv_options"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_more_vert"
+            android:contentDescription="@string/options"
+            android:layout_gravity="end"
+            android:visibility="gone" />
+    </LinearLayout>
 
 </LinearLayout>

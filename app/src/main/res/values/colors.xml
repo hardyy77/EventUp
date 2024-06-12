@@ -5,6 +5,6 @@
     <color name="discord_dark">#23272A</color>
     <color name="discord_very_dark">#18191C</color>
     <color name="white">#FFFFFF</color>
-    <color name="darkAccentColor">#7289DA</color> <!-- Dodane -->
-    <color name="navigationItemDefault">#99AAB5</color> <!-- Dodane -->
+    <color name="darkAccentColor">#7289DA</color>
+    <color name="navigationItemDefault">#99AAB5</color>
 </resources>

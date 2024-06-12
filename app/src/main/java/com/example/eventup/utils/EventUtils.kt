@@ -1,171 +1,72 @@
 package com.example.eventup.utils
 
-import android.content.Context
 import com.example.eventup.models.Event
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
-import java.text.SimpleDateFormat
-import java.util.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 object EventUtils {
-    private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
-    fun getInterestingEvents(context: Context, callback: (List<Event>) -> Unit) {
-        val sharedPreferences = context.getSharedPreferences("EventUpPreferences", Context.MODE_PRIVATE)
-        val lastUpdateTime = sharedPreferences.getLong("lastUpdateTime", 0)
-        val currentTime = System.currentTimeMillis()
-        val oneDayMillis = 24 * 60 * 60 * 1000
+    suspend fun getAllEvents(): List<Event> {
+        val query = "SELECT * FROM events"
+        val resultSet = withContext(Dispatchers.IO) { DatabaseHandler.executeQuery(query) }
+        val events = mutableListOf<Event>()
 
-        if (currentTime - lastUpdateTime >= oneDayMillis) {
-            updateInterestingEvents(context, callback)
-        } else {
-            val gson = Gson()
-            val json = sharedPreferences.getString("selectedInterestingEvents", "")
-            if (!json.isNullOrEmpty()) {
-                val type = object : TypeToken<List<Event>>() {}.type
-                val selectedEvents: List<Event> = gson.fromJson(json, type)
-                selectedEvents.forEach { println("Restored interesting event ID from prefs: ${it.id}") }
-                restoreInterestingEventsWithIDs(selectedEvents, callback)
-            } else {
-                callback(emptyList())
-            }
+        while (resultSet?.next() == true) {
+            val event = Event(
+                id = resultSet.getString("id"),
+                name = resultSet.getString("name"),
+                location = resultSet.getString("location"),
+                date = resultSet.getString("date"),
+                genres = resultSet.getString("genres"),
+                description = resultSet.getString("description"),
+                interest = resultSet.getInt("interest"),
+                isFavorite = resultSet.getBoolean("isFavorite")
+            )
+            events.add(event)
+        }
+        return events
+    }
+
+    suspend fun getPopularEvents(): List<Event> {
+        val query = "SELECT * FROM events ORDER BY interest DESC LIMIT 10"
+        val resultSet = withContext(Dispatchers.IO) { DatabaseHandler.executeQuery(query) }
+        val events = mutableListOf<Event>()
+
+        while (resultSet?.next() == true) {
+            val event = Event(
+                id = resultSet.getString("id"),
+                name = resultSet.getString("name"),
+                location = resultSet.getString("location"),
+                date = resultSet.getString("date"),
+                genres = resultSet.getString("genres"),
+                description = resultSet.getString("description"),
+                interest = resultSet.getInt("interest"),
+                isFavorite = resultSet.getBoolean("isFavorite")
+            )
+            events.add(event)
+        }
+        return events
+    }
+
+    suspend fun addEventToFavorites(event: Event, userId: String) {
+        val query = "INSERT INTO favorites (event_id, user_id) VALUES ('${event.id}', '$userId')"
+        withContext(Dispatchers.IO) {
+            DatabaseHandler.executeUpdate(query)
         }
     }
 
-    private fun updateInterestingEvents(context: Context, callback: (List<Event>) -> Unit) {
-        val firestore = FirebaseFirestore.getInstance()
-        val currentDate = dateFormat.format(Date())
-        firestore.collection("events")
-            .whereGreaterThanOrEqualTo("date", currentDate)
-            .get()
-            .addOnSuccessListener { result ->
-                val events = result.map { document ->
-                    val event = Event(
-                        id = document.id,
-                        name = document.getString("name") ?: "",
-                        location = document.getString("location") ?: "",
-                        date = document.getString("date") ?: "",
-                        genres = document.getString("genres") ?: "",
-                        description = document.getString("description") ?: "",
-                        interest = document.getLong("interest")?.toInt() ?: 0,
-                        isFavorite = document.getBoolean("isFavorite") ?: false
-                    )
-                    println("Fetched interesting event with ID: ${event.id}")
-                    event
-                }
-                val selectedEvents = events.shuffled().take(4)
-                saveSelectedEventsToPreferences(context, selectedEvents)
-                callback(selectedEvents)
-            }
-            .addOnFailureListener { exception ->
-                println("Error getting interesting events: $exception")
-            }
-    }
-
-    private fun saveSelectedEventsToPreferences(context: Context, events: List<Event>) {
-        val sharedPreferences = context.getSharedPreferences("EventUpPreferences", Context.MODE_PRIVATE)
-        val editor = sharedPreferences.edit()
-        val gson = Gson()
-        val json = gson.toJson(events)
-        events.forEach { println("Saving interesting event ID to prefs: ${it.id}") }
-        editor.putString("selectedInterestingEvents", json)
-        editor.putLong("lastUpdateTime", System.currentTimeMillis())
-        editor.apply()
-    }
-
-    private fun restoreInterestingEventsWithIDs(events: List<Event>, callback: (List<Event>) -> Unit) {
-        val firestore = FirebaseFirestore.getInstance()
-        val eventsWithIDs = mutableListOf<Event>()
-        events.forEach { event ->
-            if (event.id.isEmpty()) {
-                firestore.collection("events")
-                    .whereEqualTo("name", event.name)
-                    .whereEqualTo("location", event.location)
-                    .whereEqualTo("date", event.date)
-                    .limit(1)
-                    .get()
-                    .addOnSuccessListener { documents ->
-                        for (document in documents) {
-                            event.id = document.id
-                            println("Assigned ID from Firestore to event: ${event.id}")
-                        }
-                        eventsWithIDs.add(event)
-                        if (eventsWithIDs.size == events.size) {
-                            callback(eventsWithIDs)
-                        }
-                    }
-                    .addOnFailureListener { exception ->
-                        println("Error getting event ID from Firestore: $exception")
-                        eventsWithIDs.add(event)
-                        if (eventsWithIDs.size == events.size) {
-                            callback(eventsWithIDs)
-                        }
-                    }
-            } else {
-                eventsWithIDs.add(event)
-                if (eventsWithIDs.size == events.size) {
-                    callback(eventsWithIDs)
-                }
-            }
+    suspend fun removeEventFromFavorites(event: Event, userId: String) {
+        val query = "DELETE FROM favorites WHERE event_id = '${event.id}' AND user_id = '$userId'"
+        withContext(Dispatchers.IO) {
+            DatabaseHandler.executeUpdate(query)
         }
     }
 
-    fun getPopularEvents(callback: (List<Event>) -> Unit) {
-        val firestore = FirebaseFirestore.getInstance()
-        val currentDate = dateFormat.format(Date())
-        firestore.collection("events")
-            .whereGreaterThanOrEqualTo("date", currentDate)
-            .orderBy("date")
-            .orderBy("interest", com.google.firebase.firestore.Query.Direction.DESCENDING)
-            .limit(4)
-            .get()
-            .addOnSuccessListener { result ->
-                val events = result.map { document ->
-                    val event = Event(
-                        id = document.id,
-                        name = document.getString("name") ?: "",
-                        location = document.getString("location") ?: "",
-                        date = document.getString("date") ?: "",
-                        genres = document.getString("genres") ?: "",
-                        description = document.getString("description") ?: "",
-                        interest = document.getLong("interest")?.toInt() ?: 0,
-                        isFavorite = document.getBoolean("isFavorite") ?: false
-                    )
-                    println("Fetched popular event with ID: ${event.id}")
-                    event
-                }
-                callback(events)
-            }
-            .addOnFailureListener { exception ->
-                println("Error getting popular events: $exception")
-            }
-    }
-
-    fun getAllEvents(callback: (List<Event>) -> Unit) {
-        val firestore = FirebaseFirestore.getInstance()
-        firestore.collection("events")
-            .get()
-            .addOnSuccessListener { result ->
-                val events = result.map { document ->
-                    val event = Event(
-                        id = document.id,
-                        name = document.getString("name") ?: "",
-                        location = document.getString("location") ?: "",
-                        date = document.getString("date") ?: "",
-                        genres = document.getString("genres") ?: "",
-                        description = document.getString("description") ?: "",
-                        interest = document.getLong("interest")?.toInt() ?: 0,
-                        isFavorite = document.getBoolean("isFavorite") ?: false
-                    )
-                    println("Fetched event with ID: ${event.id}")
-                    event
-                }
-                callback(events)
-            }
-            .addOnFailureListener { exception ->
-                println("Error getting events: $exception")
-            }
+    suspend fun deleteEvent(eventId: String) {
+        val query = "DELETE FROM events WHERE id = '$eventId'"
+        withContext(Dispatchers.IO) {
+            DatabaseHandler.executeUpdate(query)
+        }
     }
 
     fun filterEvents(events: List<Event>, query: String): List<Event> {
