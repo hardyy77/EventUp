@@ -176,9 +176,7 @@ class HomeFragment : Fragment() {
         if (event.isFavorite) {
             lifecycleScope.launch {
                 try {
-                    FavoritesRepository.removeEventFromFavorites(event,
-                        currentUser!!.id!!.toString()
-                    )
+                    FavoritesRepository.removeEventFromFavorites(event, currentUser!!.id!!.toString())
                     event.isFavorite = false
                     adapter.notifyItemChanged(position)
                     println("Removed event from favorites: ${event.id}")
@@ -212,6 +210,7 @@ class HomeFragment : Fragment() {
         lifecycleScope.launch {
             try {
                 EventUtils.deleteEvent(event.id)
+                sendRefreshBroadcast()
                 updateUI()
             } catch (e: Exception) {
                 Log.e("HomeFragment", "Failed to delete event: ${e.message}")
@@ -246,6 +245,11 @@ class HomeFragment : Fragment() {
             Log.d("HomeFragment", "Received broadcast to refresh events")
             updateUI()
         }
+    }
+
+    private fun sendRefreshBroadcast() {
+        val intent = Intent("com.example.eventup.REFRESH_EVENTS")
+        context?.sendBroadcast(intent)
     }
 
     private fun scheduleWork() {

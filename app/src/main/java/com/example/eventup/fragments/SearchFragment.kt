@@ -131,6 +131,7 @@ class SearchFragment : Fragment() {
         CoroutineScope(Dispatchers.Main).launch {
             try {
                 withContext(Dispatchers.IO) { EventUtils.deleteEvent(event.id) }
+                sendRefreshBroadcast()
                 eventsAdapter.notifyDataSetChanged()
                 println("Deleted event: ${event.id}")
             } catch (e: Exception) {
@@ -150,6 +151,11 @@ class SearchFragment : Fragment() {
             Log.d("SearchFragment", "Received broadcast to refresh events")
             fetchAllEvents()
         }
+    }
+
+    private fun sendRefreshBroadcast() {
+        val intent = Intent("com.example.eventup.REFRESH_EVENTS")
+        context?.sendBroadcast(intent)
     }
 
     private fun syncFavorites(events: List<Event>, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
