@@ -7,11 +7,11 @@ import com.example.eventup.models.Event
 import com.google.gson.Gson
 
 object EventDetailsHelper {
-    fun openEventDetails(context: Context, event: Event) {
-        val intent = Intent(context, EventDetailsActivity::class.java).apply {
-            val eventJson = Gson().toJson(event)
-            putExtra("event", eventJson)
-        }
-        context.startActivity(intent)
-    }
+//    fun openEventDetails(context: Context, event: Event) {
+//        val intent = Intent(context, EventDetailsActivity::class.java).apply {
+//            val eventJson = Gson().toJson(event)
+//            putExtra("event", eventJson)
+//        }
+//        context.startActivity(intent)
+//    }
 }

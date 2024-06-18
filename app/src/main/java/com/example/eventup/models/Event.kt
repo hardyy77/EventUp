@@ -11,8 +11,9 @@ data class Event(
     val genres: String = "",
     val description: String = "",
     var interest: Int = 0,
-    var isFavorite: Boolean = false
+    var isFavorite: Boolean = false // Dodane pole
 ) : Parcelable {
+
     constructor(parcel: Parcel) : this(
         parcel.readString() ?: "",
         parcel.readString() ?: "",
@@ -21,7 +22,7 @@ data class Event(
         parcel.readString() ?: "",
         parcel.readString() ?: "",
         parcel.readInt(),
-        parcel.readByte() != 0.toByte()
+        parcel.readByte() != 0.toByte() // Czytanie pola isFavorite z Parcel
     )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
@@ -32,7 +33,7 @@ data class Event(
         parcel.writeString(genres)
         parcel.writeString(description)
         parcel.writeInt(interest)
-        parcel.writeByte(if (isFavorite) 1 else 0)
+        parcel.writeByte(if (isFavorite) 1 else 0) // Zapisywanie pola isFavorite do Parcel
     }
 
     override fun describeContents(): Int {
@@ -47,18 +48,5 @@ data class Event(
         override fun newArray(size: Int): Array<Event?> {
             return arrayOfNulls(size)
         }
-    }
-
-    fun toMap(): Map<String, Any> {
-        return mapOf(
-            "id" to id,
-            "name" to name,
-            "location" to location,
-            "date" to date,
-            "genres" to genres,
-            "description" to description,
-            "interest" to interest,
-            "isFavorite" to isFavorite
-        )
     }
 }

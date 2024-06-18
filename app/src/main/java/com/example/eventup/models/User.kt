@@ -5,5 +5,4 @@ data class User(
     val email: String = "",
     val displayName: String = "",
     var role: String = "user",
-    val id: Int?
 )

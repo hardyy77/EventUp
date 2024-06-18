@@ -43,7 +43,7 @@ object DatabaseHandler {
     }
 
     suspend fun executeQuery(query: String): ResultSet? = withContext(Dispatchers.IO) {
-        var connection: Connection? = null
+        val connection: Connection?
         var resultSet: ResultSet? = null
         try {
             connection = getConnection()
@@ -121,7 +121,6 @@ object DatabaseHandler {
         role
     }
 
-
     suspend fun verifyUser(email: String, password: String): Boolean = withContext(Dispatchers.IO) {
         val query = "SELECT * FROM users WHERE email = '$email' AND password = '$password'"
         var connection: Connection? = null
@@ -156,7 +155,7 @@ object DatabaseHandler {
                 resultSet = executeQuery(query)
                 if (resultSet != null && resultSet.next()) {
                     user = User(
-                        id = resultSet.getInt("uid"),
+                        uid = resultSet.getInt("uid").toString(),
                         email = resultSet.getString("email"),
                         displayName = resultSet.getString("displayName"),
                         role = resultSet.getString("role")

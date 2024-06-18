@@ -4,18 +4,18 @@ import com.example.eventup.models.Event
 
 object EventRepository {
 
-    suspend fun saveEvent(event: Event) {
-        val query = """
-            INSERT INTO events (name, location, date, genres, description, interest, isFavorite)
-            VALUES ('${event.name}', '${event.location}', '${event.date}', '${event.genres}', '${event.description}', ${event.interest}, ${event.isFavorite})
-        """.trimIndent()
-        DatabaseHandler.executeUpdate(query)
-    }
+//    suspend fun saveEvent(event: Event) {
+//        val query = """
+//            INSERT INTO events (name, location, date, genres, description, interest)
+//            VALUES ('${event.name}', '${event.location}', '${event.date}', '${event.genres}', '${event.description}', ${event.interest})
+//        """.trimIndent()
+//        DatabaseHandler.executeUpdate(query)
+//    }
 
     suspend fun updateEvent(event: Event) {
         val query = """
             UPDATE events 
-            SET name = '${event.name}', location = '${event.location}', date = '${event.date}', genres = '${event.genres}', description = '${event.description}', interest = ${event.interest}, isFavorite = ${event.isFavorite}
+            SET name = '${event.name}', location = '${event.location}', date = '${event.date}', genres = '${event.genres}', description = '${event.description}', interest = ${event.interest}
             WHERE id = '${event.id}'
         """.trimIndent()
         DatabaseHandler.executeUpdate(query)
@@ -33,26 +33,24 @@ object EventRepository {
                 date = resultSet.getString("date"),
                 genres = resultSet.getString("genres"),
                 description = resultSet.getString("description"),
-                interest = resultSet.getInt("interest"),
-                isFavorite = resultSet.getBoolean("isFavorite")
+                interest = resultSet.getInt("interest")
             )
             events.add(event)
         }
         return events
     }
 
-    suspend fun deleteEvent(eventId: String) {
-        val query = "DELETE FROM events WHERE id = '$eventId'"
-        DatabaseHandler.executeUpdate(query)
-    }
+//    suspend fun syncFavorites(events: List<Event>, userId: String) {
+//        val favoriteEventIds = FavoritesRepository.getUserEventIds(userId)
+//        events.forEach { event ->
+//            if (favoriteEventIds.contains(event.id)) {
+//                // Można dodać dodatkowe akcje dla ulubionych wydarzeń, np. zmiana wyglądu
+//            }
+//        }
+//    }
 
-    suspend fun syncFavorites(events: List<Event>, userId: String) {
-        val query = "SELECT eventId FROM favorites WHERE userId = '$userId'"
-        val resultSet = DatabaseHandler.executeQuery(query)
-        val favoriteEventIds = mutableListOf<String>()
-        while (resultSet?.next() == true) {
-            favoriteEventIds.add(resultSet.getString("eventId"))
-        }
-        events.forEach { it.isFavorite = favoriteEventIds.contains(it.id) }
-    }
+//    suspend fun deleteEvent(eventId: String) {
+//        val query = "DELETE FROM events WHERE id = '$eventId'"
+//        DatabaseHandler.executeUpdate(query)
+//    }
 }

@@ -96,12 +96,12 @@ class ProfileFragment : Fragment() {
     private fun updateUI(user: User?) {
         if (user != null) {
             userEmailTextView.text = "Email: ${user.email}"
-            userUidTextView.text = "UID: ${user.id}"
+            userUidTextView.text = "UID: ${user.uid}"
             userEmailTextView.visibility = View.VISIBLE
             userUidTextView.visibility = View.VISIBLE
             loginLogoutButton.text = "Logout"
             loginLogoutButton.visibility = View.VISIBLE
-            user.id?.let { fetchUserRole(it) }
+            fetchUserRole(user.uid)
         } else {
             userEmailTextView.visibility = View.GONE
             userUidTextView.visibility = View.GONE
@@ -115,7 +115,7 @@ class ProfileFragment : Fragment() {
         }
     }
 
-    private fun fetchUserRole(userId: Int) {
+    private fun fetchUserRole(userId: String) {
         CoroutineScope(Dispatchers.Main).launch {
             val query = "SELECT role FROM users WHERE uid = $userId"
             val resultSet = withContext(Dispatchers.IO) {

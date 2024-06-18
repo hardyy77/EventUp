@@ -9,27 +9,34 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.SearchView
+import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.appcompat.widget.SearchView
 import com.example.eventup.models.Event
 import com.example.eventup.utils.EventUtils
-import com.example.eventup.utils.DatabaseHandler
+import com.example.eventup.utils.UserUtils
 import com.example.eventup.activities.EventDetailsActivity
 import com.example.eventup.activities.ManageEventActivity
 import com.example.eventup.adapters.EventsAdapter
 import com.example.eventup.databinding.FragmentSearchBinding
+import com.example.eventup.utils.FavoritesRepository
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 class SearchFragment : Fragment() {
 
     private lateinit var eventsAdapter: EventsAdapter
     private lateinit var allEvents: List<Event>
-    private var userId: String = "currentUserId" // Replace with actual user ID management
+    private var userId: String? = null
+    private val mutex = Mutex()
+    private val currentUser = UserUtils.getCurrentUser()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val binding = FragmentSearchBinding.inflate(inflater, container, false)
@@ -81,35 +88,70 @@ class SearchFragment : Fragment() {
             try {
                 val events = withContext(Dispatchers.IO) { EventUtils.getAllEvents() }
                 allEvents = events
-                syncFavorites(allEvents, {
+                println("Fetched ${allEvents.size} events")
+                allEvents.forEach {
+                    println("Event: ${it.name}, ${it.location}, ${it.date}")
+                }
+                syncEvents(allEvents) {
                     eventsAdapter.submitList(allEvents)
-                }, {
-                    // Handle error
-                })
+                }
             } catch (e: Exception) {
-                // Handle error
+                println("Failed to fetch events: ${e.message}")
+                e.printStackTrace()
             }
         }
     }
 
     private fun toggleFavorite(event: Event) {
-        CoroutineScope(Dispatchers.Main).launch {
-            val position = eventsAdapter.events.indexOf(event)
-            println("Toggling favorite for event: ${event.id} (isFavorite: ${event.isFavorite})")
-            try {
-                if (event.isFavorite) {
-                    withContext(Dispatchers.IO) { EventUtils.removeEventFromFavorites(event, userId) }
-                    event.isFavorite = false
-                } else {
-                    withContext(Dispatchers.IO) { EventUtils.addEventToFavorites(event, userId) }
-                    event.isFavorite = true
-                }
-                eventsAdapter.notifyItemChanged(position)
-                println("Updated favorite status for event: ${event.id}")
-            } catch (e: Exception) {
-                println("Failed to update favorite status: ${e.message}")
-                e.printStackTrace()
+        if (currentUser == null) {
+            Toast.makeText(context, "Please log in to favorite events.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val position = eventsAdapter.events.indexOf(event)
+        println("Toggling favorite for event: ${event.id}")
+
+        lifecycleScope.launch {
+            mutex.withLock {
+                handleFavoriteToggle(event, eventsAdapter, position)
             }
+        }
+    }
+
+    private suspend fun handleFavoriteToggle(event: Event, adapter: EventsAdapter, position: Int) {
+        try {
+            // Sprawdź stan ulubionych w bazie danych
+            Log.i("SearchFragment", "Checking current favorite state in the database for event: ${event.id}")
+            val isFavoriteNow = withContext(Dispatchers.IO) {
+                currentUser?.let { FavoritesRepository.isEventFavorite(event.id, it.uid) }
+            } ?: false
+
+            // Zsynchronizuj UI jeśli stan się różni
+            if (isFavoriteNow != event.isFavorite) {
+                Log.i("SearchFragment", "Mismatch between UI and database state. Syncing UI with database.")
+                event.isFavorite = isFavoriteNow
+                adapter.notifyItemChanged(position)
+                return
+            }
+
+            // Wykonaj operację na ulubionych
+            if (isFavoriteNow) {
+                withContext(Dispatchers.IO) {
+                    currentUser?.let { FavoritesRepository.removeEventFromFavorites(event.id, it.uid) }
+                }
+                Log.i("SearchFragment", "Removed event: ${event.id} from favorites")
+                event.isFavorite = false
+            } else {
+                withContext(Dispatchers.IO) {
+                    currentUser?.let { FavoritesRepository.addEventToFavorites(event.id, it.uid) }
+                }
+                Log.i("SearchFragment", "Added event: ${event.id} to favorites")
+                event.isFavorite = true
+            }
+
+            adapter.notifyItemChanged(position)
+        } catch (e: Exception) {
+            Log.e("SearchFragment", "Failed to toggle favorite: ${e.message}", e)
         }
     }
 
@@ -158,19 +200,25 @@ class SearchFragment : Fragment() {
         context?.sendBroadcast(intent)
     }
 
-    private fun syncFavorites(events: List<Event>, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
+    private fun syncEvents(events: List<Event>, onComplete: () -> Unit) {
         CoroutineScope(Dispatchers.Main).launch {
             try {
-                val query = "SELECT event_id FROM favorites WHERE user_id = '$userId'"
-                val resultSet = withContext(Dispatchers.IO) { DatabaseHandler.executeQuery(query) }
-                val favoriteEventIds = mutableListOf<String>()
-                while (resultSet?.next() == true) {
-                    favoriteEventIds.add(resultSet.getString("event_id"))
+                userId = UserUtils.getCurrentUserId()?.toString()
+                val favoriteEventIds = withContext(Dispatchers.IO) {
+                    if (userId != null) {
+                        FavoritesRepository.getUserEventIds(userId!!)
+                    } else {
+                        emptyList()
+                    }
                 }
-                events.forEach { it.isFavorite = favoriteEventIds.contains(it.id) }
-                onSuccess()
+                events.forEach { event ->
+                    event.isFavorite = favoriteEventIds.contains(event.id)
+                }
+                eventsAdapter.submitList(events)
+                onComplete()
             } catch (e: Exception) {
-                onFailure(e)
+                println("Failed to sync events: ${e.message}")
+                e.printStackTrace()
             }
         }
     }

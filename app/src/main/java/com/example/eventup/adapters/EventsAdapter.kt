@@ -10,8 +10,11 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.eventup.R
 import com.example.eventup.models.Event
-import com.example.eventup.utils.EventUtils
+import com.example.eventup.utils.FavoritesRepository
 import com.example.eventup.utils.UserUtils
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class EventsAdapter(
     private val onClick: (Event) -> Unit,
@@ -41,11 +44,6 @@ class EventsAdapter(
         notifyDataSetChanged()
     }
 
-    fun updateEvents(newEvents: List<Event>) {
-        this.events = newEvents
-        notifyDataSetChanged()
-    }
-
     inner class EventViewHolder(
         itemView: View,
         private val onClick: (Event) -> Unit,
@@ -69,10 +67,15 @@ class EventsAdapter(
                 }
             }
             favoriteImageView.setOnClickListener {
-                currentEvent?.let {
-                    it.isFavorite = !it.isFavorite
-                    updateFavoriteIcon(it.isFavorite)
-                    onFavoriteClick(it)
+                currentEvent?.let { event ->
+                    if (currentUser != null) {
+                        CoroutineScope(Dispatchers.Main).launch {
+                            toggleFavorite(event)
+                            onFavoriteClick(event)
+                        }
+                    } else {
+                        // Pokaż komunikat użytkownikowi, że musi się zalogować
+                    }
                 }
             }
             optionsImageView.setOnClickListener {
@@ -88,7 +91,13 @@ class EventsAdapter(
             dateTextView.text = event.date
             locationTextView.text = event.location
             genresTextView.text = event.genres
-            updateFavoriteIcon(event.isFavorite)
+            updateFavoriteIcon(false)
+            if (currentUser != null) {
+                CoroutineScope(Dispatchers.Main).launch {
+                    val isFavorite = FavoritesRepository.isEventFavorite(event.id, currentUser.uid)
+                    updateFavoriteIcon(isFavorite)
+                }
+            }
             checkUserAuthorization()
         }
 
@@ -122,6 +131,17 @@ class EventsAdapter(
                 }
             }
             popup.show()
+        }
+
+        private suspend fun toggleFavorite(event: Event) {
+            val isFavorite = currentUser?.let { FavoritesRepository.isEventFavorite(event.id, it.uid) }
+            if (isFavorite == true) {
+                currentUser?.let { FavoritesRepository.removeEventFromFavorites(event.id, it.uid) }
+                updateFavoriteIcon(false)
+            } else {
+                currentUser?.let { FavoritesRepository.addEventToFavorites(event.id, it.uid) }
+                updateFavoriteIcon(true)
+            }
         }
     }
 }

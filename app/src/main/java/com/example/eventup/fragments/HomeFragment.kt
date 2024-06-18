@@ -33,6 +33,8 @@ import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.sql.SQLException
 import java.util.concurrent.TimeUnit
 
@@ -44,6 +46,7 @@ class HomeFragment : Fragment() {
     private val binding get() = _binding!!
     private var isReceiverRegistered = false
     private val currentUser = UserUtils.getCurrentUser()
+    private val mutex = Mutex()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
@@ -69,7 +72,6 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupRecyclerViews() {
-        // Najciekawsze
         binding.interestingRecyclerView.layoutManager = LinearLayoutManager(context)
         interestingEventsAdapter = EventsAdapter(
             onClick = { event -> navigateToEventDetails(event) },
@@ -79,7 +81,6 @@ class HomeFragment : Fragment() {
         )
         binding.interestingRecyclerView.adapter = interestingEventsAdapter
 
-        // Popularne
         binding.popularRecyclerView.layoutManager = LinearLayoutManager(context)
         popularEventsAdapter = EventsAdapter(
             onClick = { event -> navigateToEventDetails(event) },
@@ -105,8 +106,7 @@ class HomeFragment : Fragment() {
                         date = resultSet.getString("date"),
                         genres = resultSet.getString("genres"),
                         description = resultSet.getString("description"),
-                        interest = resultSet.getInt("interest"),
-                        isFavorite = resultSet.getBoolean("isFavorite")
+                        interest = resultSet.getInt("interest")
                     )
                     events.add(event)
                 }
@@ -123,7 +123,7 @@ class HomeFragment : Fragment() {
             Log.e("HomeFragment", "Failed to fetch interesting events: resultSet is null")
         }
 
-        interestingEventsAdapter.submitList(events)
+        syncEvents(events, interestingEventsAdapter)
     }
 
     private suspend fun fetchPopularEvents() {
@@ -141,8 +141,7 @@ class HomeFragment : Fragment() {
                         date = resultSet.getString("date"),
                         genres = resultSet.getString("genres"),
                         description = resultSet.getString("description"),
-                        interest = resultSet.getInt("interest"),
-                        isFavorite = resultSet.getBoolean("isFavorite")
+                        interest = resultSet.getInt("interest")
                     )
                     events.add(event)
                 }
@@ -159,7 +158,7 @@ class HomeFragment : Fragment() {
             Log.e("HomeFragment", "Failed to fetch popular events: resultSet is null")
         }
 
-        popularEventsAdapter.submitList(events)
+        syncEvents(events, popularEventsAdapter)
     }
 
     private fun navigateToEventDetails(event: Event) {
@@ -170,33 +169,56 @@ class HomeFragment : Fragment() {
     }
 
     private fun toggleFavorite(event: Event, isInteresting: Boolean) {
+        if (currentUser == null) {
+            Toast.makeText(context, "Please log in to favorite events.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         val adapter = if (isInteresting) interestingEventsAdapter else popularEventsAdapter
         val position = adapter.events.indexOf(event)
-        println("Toggling favorite for event: ${event.id} (isFavorite: ${event.isFavorite})")
-        if (event.isFavorite) {
-            lifecycleScope.launch {
-                try {
-                    FavoritesRepository.removeEventFromFavorites(event, currentUser!!.id!!.toString())
-                    event.isFavorite = false
-                    adapter.notifyItemChanged(position)
-                    println("Removed event from favorites: ${event.id}")
-                } catch (e: Exception) {
-                    println("Failed to remove event from favorites: ${e.message}")
-                    e.printStackTrace()
-                }
+        println("Toggling favorite for event: ${event.id}")
+
+        lifecycleScope.launch {
+            mutex.withLock {
+                handleFavoriteToggle(event, adapter, position)
             }
-        } else {
-            lifecycleScope.launch {
-                try {
-                    FavoritesRepository.addEventToFavorites(event, currentUser!!.id!!.toString())
-                    event.isFavorite = true
-                    adapter.notifyItemChanged(position)
-                    println("Added event to favorites: ${event.id}")
-                } catch (e: Exception) {
-                    println("Failed to add event to favorites: ${e.message}")
-                    e.printStackTrace()
-                }
+        }
+    }
+
+    private suspend fun handleFavoriteToggle(event: Event, adapter: EventsAdapter, position: Int) {
+        try {
+            // Sprawdź stan ulubionych w bazie danych
+            Log.i("HomeFragment", "Checking current favorite state in the database for event: ${event.id}")
+            val isFavoriteNow = withContext(Dispatchers.IO) {
+                currentUser?.let { FavoritesRepository.isEventFavorite(event.id, it.uid) }
+            } ?: false
+
+            // Zsynchronizuj UI jeśli stan się różni
+            if (isFavoriteNow != event.isFavorite) {
+                Log.i("HomeFragment", "Mismatch between UI and database state. Syncing UI with database.")
+                event.isFavorite = isFavoriteNow
+                adapter.notifyItemChanged(position)
+                return
             }
+
+            // Wykonaj operację na ulubionych
+            if (isFavoriteNow) {
+                withContext(Dispatchers.IO) {
+                    currentUser?.let { FavoritesRepository.removeEventFromFavorites(event.id, it.uid) }
+                }
+                Log.i("HomeFragment", "Removed event: ${event.id} from favorites")
+                event.isFavorite = false
+            } else {
+                withContext(Dispatchers.IO) {
+                    currentUser?.let { FavoritesRepository.addEventToFavorites(event.id, it.uid) }
+                }
+                Log.i("HomeFragment", "Added event: ${event.id} to favorites")
+                event.isFavorite = true
+            }
+
+            adapter.notifyItemChanged(position)
+        } catch (e: Exception) {
+            Log.e("HomeFragment", "Failed to toggle favorite: ${e.message}", e)
         }
     }
 
@@ -268,5 +290,26 @@ class HomeFragment : Fragment() {
             ExistingPeriodicWorkPolicy.REPLACE,
             workRequest
         )
+    }
+
+    private fun syncEvents(events: List<Event>, adapter: EventsAdapter) {
+        lifecycleScope.launch {
+            try {
+                val favoriteEventIds = if (currentUser != null) {
+                    withContext(Dispatchers.IO) {
+                        FavoritesRepository.getUserEventIds(currentUser.uid.toString())
+                    }
+                } else {
+                    emptyList()
+                }
+                adapter.submitList(events.map { event ->
+                    event.copy().apply {
+                        isFavorite = favoriteEventIds.contains(id)
+                    }
+                })
+            } catch (e: Exception) {
+                Log.e("HomeFragment", "Failed to sync events: ${e.message}", e)
+            }
+        }
     }
 }

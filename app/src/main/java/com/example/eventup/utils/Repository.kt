@@ -15,25 +15,25 @@ object Repository {
 
     suspend fun addEvent(event: Event) = withContext(Dispatchers.IO) {
         val query = """
-            INSERT INTO events (id, name, date, location, genres, description, interest, isFavorite) 
-            VALUES ('${event.id}', '${event.name}', '${event.date}', '${event.location}', '${event.genres}', '${event.description}', ${event.interest}, ${event.isFavorite})
+            INSERT INTO events (id, name, date, location, genres, description, interest)
+            VALUES ('${event.id}', '${event.name}', '${event.date}', '${event.location}', '${event.genres}', '${event.description}', ${event.interest})
         """.trimIndent()
         DatabaseHandler.executeUpdate(query)
     }
 
-    suspend fun updateEvent(event: Event) = withContext(Dispatchers.IO) {
-        val query = """
-            UPDATE events 
-            SET name = '${event.name}', date = '${event.date}', location = '${event.location}', genres = '${event.genres}', description = '${event.description}', interest = ${event.interest}, isFavorite = ${event.isFavorite}
-            WHERE id = '${event.id}'
-        """.trimIndent()
-        DatabaseHandler.executeUpdate(query)
-    }
+//    suspend fun updateEvent(event: Event) = withContext(Dispatchers.IO) {
+//        val query = """
+//            UPDATE events
+//            SET name = '${event.name}', date = '${event.date}', location = '${event.location}', genres = '${event.genres}', description = '${event.description}', interest = ${event.interest}
+//            WHERE id = '${event.id}'
+//        """.trimIndent()
+//        DatabaseHandler.executeUpdate(query)
+//    }
 
-    suspend fun deleteEvent(eventId: String) = withContext(Dispatchers.IO) {
-        val query = "DELETE FROM events WHERE id = '$eventId'"
-        DatabaseHandler.executeUpdate(query)
-    }
+//    suspend fun deleteEvent(eventId: String) = withContext(Dispatchers.IO) {
+//        val query = "DELETE FROM events WHERE id = '$eventId'"
+//        DatabaseHandler.executeUpdate(query)
+//    }
 
     private fun mapResultSetToEvents(resultSet: ResultSet?): List<Event> {
         val events = mutableListOf<Event>()
@@ -47,8 +47,7 @@ object Repository {
                         location = it.getString("location"),
                         genres = it.getString("genres"),
                         description = it.getString("description"),
-                        interest = it.getInt("interest"),
-                        isFavorite = it.getBoolean("isFavorite")
+                        interest = it.getInt("interest")
                     )
                 )
             }

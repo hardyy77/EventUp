@@ -8,7 +8,7 @@
     android:padding="16dp"
     android:background="@color/discord_very_dark">
 
-    <SearchView
+    <androidx.appcompat.widget.SearchView
         android:id="@+id/search_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

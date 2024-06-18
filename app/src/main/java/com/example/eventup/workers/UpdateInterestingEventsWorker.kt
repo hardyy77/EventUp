@@ -33,8 +33,8 @@ class UpdateInterestingEventsWorker(context: Context, params: WorkerParameters) 
 
             events.forEach { event ->
                 val insertQuery = """
-                    INSERT INTO todayinterestingevents (id, name, location, date, genres, description, interest, isFavorite)
-                    VALUES ('${event.id}', '${event.name}', '${event.location}', '${event.date}', '${event.genres}', '${event.description}', ${event.interest}, ${event.isFavorite})
+                    INSERT INTO todayinterestingevents (id, name, location, date, genres, description, interest)
+                    VALUES ('${event.id}', '${event.name}', '${event.location}', '${event.date}', '${event.genres}', '${event.description}', ${event.interest})
                 """.trimIndent()
                 DatabaseHandler.executeUpdate(insertQuery)
             }

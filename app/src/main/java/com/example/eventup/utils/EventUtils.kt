@@ -8,6 +8,7 @@ object EventUtils {
 
     suspend fun getAllEvents(): List<Event> {
         val query = "SELECT * FROM events"
+        println("Executing getAllEvents query: $query")
         val resultSet = withContext(Dispatchers.IO) { DatabaseHandler.executeQuery(query) }
         val events = mutableListOf<Event>()
 
@@ -19,8 +20,7 @@ object EventUtils {
                 date = resultSet.getString("date"),
                 genres = resultSet.getString("genres"),
                 description = resultSet.getString("description"),
-                interest = resultSet.getInt("interest"),
-                isFavorite = resultSet.getBoolean("isFavorite")
+                interest = resultSet.getInt("interest")
             )
             events.add(event)
         }
@@ -29,6 +29,7 @@ object EventUtils {
 
     suspend fun getPopularEvents(): List<Event> {
         val query = "SELECT * FROM events ORDER BY interest DESC LIMIT 10"
+        println("Executing getPopularEvents query: $query")
         val resultSet = withContext(Dispatchers.IO) { DatabaseHandler.executeQuery(query) }
         val events = mutableListOf<Event>()
 
@@ -40,32 +41,19 @@ object EventUtils {
                 date = resultSet.getString("date"),
                 genres = resultSet.getString("genres"),
                 description = resultSet.getString("description"),
-                interest = resultSet.getInt("interest"),
-                isFavorite = resultSet.getBoolean("isFavorite")
+                interest = resultSet.getInt("interest")
             )
             events.add(event)
         }
         return events
     }
 
-    suspend fun addEventToFavorites(event: Event, userId: String) {
-        val query = "INSERT INTO favorites (event_id, user_id) VALUES ('${event.id}', '$userId')"
-        withContext(Dispatchers.IO) {
-            DatabaseHandler.executeUpdate(query)
-        }
-    }
-
-    suspend fun removeEventFromFavorites(event: Event, userId: String) {
-        val query = "DELETE FROM favorites WHERE event_id = '${event.id}' AND user_id = '$userId'"
-        withContext(Dispatchers.IO) {
-            DatabaseHandler.executeUpdate(query)
-        }
-    }
-
     suspend fun deleteEvent(eventId: String) {
-        val query = "DELETE FROM events WHERE id = '$eventId'"
         withContext(Dispatchers.IO) {
-            DatabaseHandler.executeUpdate(query)
+            // Najpierw usuń powiązane rekordy w tabeli user_favorites
+            DatabaseHandler.executeUpdate("DELETE FROM user_favorites WHERE event_id = '$eventId'")
+            // Następnie usuń rekord w tabeli events
+            DatabaseHandler.executeUpdate("DELETE FROM events WHERE id = '$eventId'")
         }
     }
 

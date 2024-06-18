@@ -10,6 +10,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -20,21 +21,24 @@ import com.example.eventup.adapters.EventsAdapter
 import com.example.eventup.databinding.FragmentFavoritesBinding
 import com.example.eventup.activities.EventDetailsActivity
 import com.example.eventup.activities.ManageEventActivity
-import com.example.eventup.utils.EventRepository
+import com.example.eventup.utils.EventUtils
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 class FavoritesFragment : Fragment() {
 
     private lateinit var eventAdapter: EventsAdapter
     private var favoriteEvents = mutableListOf<Event>()
     private var userId: String? = null
+    private val mutex = Mutex()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val binding = FragmentFavoritesBinding.inflate(inflater, container, false)
         val recyclerView = binding.recyclerViewFavorites
         val loginPrompt: TextView = binding.loginPrompt
 
-        userId = UserUtils.getCurrentUserId().toString()
+        userId = UserUtils.getCurrentUserId()?.toString()
 
         if (userId == null) {
             recyclerView.visibility = View.GONE
@@ -52,51 +56,63 @@ class FavoritesFragment : Fragment() {
             recyclerView.adapter = eventAdapter
             loadFavoriteEvents()
         }
-
         registerRefreshReceiver()
-
         return binding.root
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        context?.unregisterReceiver(refreshReceiver)
-    }
-
     private fun loadFavoriteEvents() {
-        userId?.let { id ->
-            lifecycleScope.launch {
-                try {
-                    val events = FavoritesRepository.getFavorites(id)
-                    favoriteEvents.clear()
-                    favoriteEvents.addAll(events)
-                    eventAdapter.submitList(favoriteEvents)
-                } catch (e: Exception) {
-                    println("Failed to load favorite events: ${e.message}")
-                }
+        lifecycleScope.launch {
+            favoriteEvents.clear()
+            userId?.let { id ->
+                favoriteEvents.addAll(FavoritesRepository.getFavorites(id))
             }
+            eventAdapter.submitList(favoriteEvents.toList())
         }
     }
 
     private fun toggleFavorite(event: Event) {
-        val position = eventAdapter.events.indexOf(event)
-        println("Toggling favorite for event: ${event.id} (isFavorite: ${event.isFavorite})")
-        val isCurrentlyFavorite = event.isFavorite
-        event.isFavorite = !isCurrentlyFavorite
+        val isCurrentlyFavorite = favoriteEvents.contains(event)
+        val position = favoriteEvents.indexOf(event)
 
         lifecycleScope.launch {
-            try {
-                if (isCurrentlyFavorite) {
-                    FavoritesRepository.removeEventFromFavorites(event, userId!!)
-                } else {
-                    FavoritesRepository.addEventToFavorites(event, userId!!)
+            mutex.withLock {
+                try {
+                    // Dodanie dokładniejszych logów
+                    Log.i("FavoritesFragment", "Checking current favorite state in the database for event: ${event.id}")
+                    val isFavoriteNow = FavoritesRepository.isEventFavorite(event.id, userId!!)
+                    Log.i("FavoritesFragment", "Current favorite state in database: $isFavoriteNow, in UI: $isCurrentlyFavorite")
+
+                    if (isCurrentlyFavorite != isFavoriteNow) {
+                        Log.i("FavoritesFragment", "Mismatch between UI and database state. Syncing UI with database.")
+                        if (isFavoriteNow) {
+                            favoriteEvents.add(event)
+                        } else {
+                            favoriteEvents.remove(event)
+                        }
+                        eventAdapter.notifyItemChanged(position)
+                        return@withLock
+                    }
+
+                    if (isCurrentlyFavorite) {
+                        Log.i("FavoritesFragment", "Removing event: ${event.id} from favorites")
+                        FavoritesRepository.removeEventFromFavorites(event.id, userId!!)
+                        favoriteEvents.remove(event)
+                    } else {
+                        Log.i("FavoritesFragment", "Adding event: ${event.id} to favorites")
+                        FavoritesRepository.addEventToFavorites(event.id, userId!!)
+                        favoriteEvents.add(event)
+                    }
+                    eventAdapter.notifyItemChanged(position)
+                } catch (e: Exception) {
+                    Log.e("FavoritesFragment", "Failed to toggle favorite: ${e.message}", e)
+                    // Revert the change if the operation fails
+                    if (isCurrentlyFavorite) {
+                        favoriteEvents.add(event)
+                    } else {
+                        favoriteEvents.remove(event)
+                    }
+                    eventAdapter.notifyItemChanged(position)
                 }
-                eventAdapter.notifyItemChanged(position)
-            } catch (e: Exception) {
-                println("Failed to toggle favorite: ${e.message}")
-                // Revert the change if the operation fails
-                event.isFavorite = isCurrentlyFavorite
-                eventAdapter.notifyItemChanged(position)
             }
         }
     }
@@ -116,7 +132,7 @@ class FavoritesFragment : Fragment() {
     private fun deleteEvent(event: Event) {
         lifecycleScope.launch {
             try {
-                EventRepository.deleteEvent(event.id)
+                EventUtils.deleteEvent(event.id)
                 loadFavoriteEvents()
                 eventAdapter.notifyDataSetChanged()
             } catch (e: Exception) {
