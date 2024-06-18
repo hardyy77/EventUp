@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">EventUp</string>
     <string name="hello_world">Hello, World!</string>
-    <string name="eventup">Eventup</string>
+    <string name="eventup">EventUp</string>
     <string name="g_wna">Główna</string>
     <string name="szukaj">Szukaj</string>
     <string name="ulubione">Ulubione</string>
@@ -9,4 +9,17 @@
     <string name="default_fragment_title">Główna</string>
     <string name="icon_description">Icon description</string>
     <string name="główna">Główna</string>
+    <string name="search_hint">Szukaj wydarzeń</string>
+    <string name="event_genres">Event Genres</string>
+    <string name="event_date">Event Date</string>
+    <string name="event_location">Event Location</string>
+    <string name="event_name">Event Name</string>
+    <string name="ostatnio_dodane">Ostatnio dodane</string>
+    <string name="favorite">ulubione</string>
+    <string name="email">E-mail</string>
+    <string name="password">Hasło</string>
+    <string name="login">Login</string>
+    <string name="sign_up_link">sign_up_link\n</string>
+    <string name="please_login">Zaloguj się aby zobaczyć twoje polubienia</string>
+    <string name="options">Opcje</string>
 </resources>

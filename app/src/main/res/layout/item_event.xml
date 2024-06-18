@@ -1,27 +1,68 @@
-<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    android:background="@drawable/rounded_rectangle"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="8dp"
+    android:gravity="start">
 
     <TextView
         android:id="@+id/event_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="18sp"
-        android:textStyle="bold" />
-
-    <TextView
-        android:id="@+id/event_date"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp" />
+        android:text="@string/event_name"
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:textColor="@color/white" />
 
     <TextView
         android:id="@+id/event_location"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:textSize="14sp" />
+        android:text="@string/event_location"
+        android:textSize="14sp"
+        android:textColor="@color/discord_light_blue" />
+
+    <TextView
+        android:id="@+id/event_date"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/event_date"
+        android:textSize="14sp"
+        android:textColor="@color/discord_light_blue" />
+
+    <TextView
+        android:id="@+id/event_genres"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/event_genres"
+        android:textSize="14sp"
+        android:textColor="@color/discord_light_blue" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="end">
+
+        <ImageView
+            android:id="@+id/iv_favorite"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_outline_heart"
+            android:contentDescription="@string/favorite"
+            android:layout_gravity="end"
+            android:layout_marginEnd="8dp" />
+
+        <ImageView
+            android:id="@+id/iv_options"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_more_vert"
+            android:contentDescription="@string/options"
+            android:layout_gravity="end"
+            android:visibility="gone" />
+    </LinearLayout>
+
 </LinearLayout>

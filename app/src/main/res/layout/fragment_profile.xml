@@ -1,6 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/discord_very_dark"
+    tools:context=".fragments.ProfileFragment">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <TextView
+        android:id="@+id/userEmailTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:visibility="gone"
+        android:textSize="16sp"
+        android:textColor="@color/white"
+        android:padding="16dp"
+        android:background="@drawable/card_background"/>
+
+    <TextView
+        android:id="@+id/userUidTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/userEmailTextView"
+        android:layout_marginTop="8dp"
+        android:visibility="gone"
+        android:textSize="16sp"
+        android:textColor="@color/white"
+        android:padding="16dp"
+        android:background="@drawable/card_background"/>
+
+    <Button
+        android:id="@+id/loginLogoutButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/userUidTextView"
+        android:layout_marginTop="16dp"
+        android:textColor="@color/white"
+        android:background="@drawable/button_background"
+        android:text="Login"/>
+
+    <Button
+        android:id="@+id/addEventButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/loginLogoutButton"
+        android:layout_marginTop="16dp"
+        android:textColor="@color/white"
+        android:background="@drawable/button_background"
+        android:text="Add Event"
+        android:visibility="gone"/>
+</RelativeLayout>

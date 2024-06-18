@@ -1,0 +1,6 @@
+<!-- app/src/main/res/drawable/card_background.xml -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="@color/discord_green" />
+    <stroke android:width="1dp" android:color="@color/discord_light_blue" />
+    <corners android:radius="8dp" />
+</shape>
