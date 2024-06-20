@@ -41,7 +41,7 @@ object Repository {
             while (it.next()) {
                 events.add(
                     Event(
-                        id = it.getString("id"),
+                        id = it.getInt("id"),
                         name = it.getString("name"),
                         date = it.getString("date"),
                         location = it.getString("location"),

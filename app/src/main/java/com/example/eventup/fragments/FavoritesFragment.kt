@@ -10,7 +10,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -28,13 +27,15 @@ import kotlinx.coroutines.sync.withLock
 
 class FavoritesFragment : Fragment() {
 
+    private lateinit var binding: FragmentFavoritesBinding
     private lateinit var eventAdapter: EventsAdapter
     private var favoriteEvents = mutableListOf<Event>()
     private var userId: String? = null
     private val mutex = Mutex()
+    private var isReceiverRegistered = false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val binding = FragmentFavoritesBinding.inflate(inflater, container, false)
+        binding = FragmentFavoritesBinding.inflate(inflater, container, false)
         val recyclerView = binding.recyclerViewFavorites
         val loginPrompt: TextView = binding.loginPrompt
 
@@ -60,6 +61,11 @@ class FavoritesFragment : Fragment() {
         return binding.root
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        unregisterRefreshReceiver()
+    }
+
     private fun loadFavoriteEvents() {
         lifecycleScope.launch {
             favoriteEvents.clear()
@@ -77,9 +83,8 @@ class FavoritesFragment : Fragment() {
         lifecycleScope.launch {
             mutex.withLock {
                 try {
-                    // Dodanie dokładniejszych logów
                     Log.i("FavoritesFragment", "Checking current favorite state in the database for event: ${event.id}")
-                    val isFavoriteNow = FavoritesRepository.isEventFavorite(event.id, userId!!)
+                    val isFavoriteNow = FavoritesRepository.isEventFavorite(event.id.toString(), userId!!)
                     Log.i("FavoritesFragment", "Current favorite state in database: $isFavoriteNow, in UI: $isCurrentlyFavorite")
 
                     if (isCurrentlyFavorite != isFavoriteNow) {
@@ -95,17 +100,16 @@ class FavoritesFragment : Fragment() {
 
                     if (isCurrentlyFavorite) {
                         Log.i("FavoritesFragment", "Removing event: ${event.id} from favorites")
-                        FavoritesRepository.removeEventFromFavorites(event.id, userId!!)
+                        FavoritesRepository.removeEventFromFavorites(event.id.toString(), userId!!)
                         favoriteEvents.remove(event)
                     } else {
                         Log.i("FavoritesFragment", "Adding event: ${event.id} to favorites")
-                        FavoritesRepository.addEventToFavorites(event.id, userId!!)
+                        FavoritesRepository.addEventToFavorites(event.id.toString(), userId!!)
                         favoriteEvents.add(event)
                     }
                     eventAdapter.notifyItemChanged(position)
                 } catch (e: Exception) {
                     Log.e("FavoritesFragment", "Failed to toggle favorite: ${e.message}", e)
-                    // Revert the change if the operation fails
                     if (isCurrentlyFavorite) {
                         favoriteEvents.add(event)
                     } else {
@@ -132,9 +136,10 @@ class FavoritesFragment : Fragment() {
     private fun deleteEvent(event: Event) {
         lifecycleScope.launch {
             try {
-                EventUtils.deleteEvent(event.id)
+                EventUtils.deleteEvent(event.id.toString())
                 loadFavoriteEvents()
                 eventAdapter.notifyDataSetChanged()
+                context?.sendBroadcast(Intent("com.example.eventup.REFRESH_EVENTS"))
             } catch (e: Exception) {
                 println("Failed to delete event: ${e.message}")
             }
@@ -142,8 +147,18 @@ class FavoritesFragment : Fragment() {
     }
 
     private fun registerRefreshReceiver() {
-        val filter = IntentFilter("com.example.eventup.REFRESH_EVENTS")
-        context?.registerReceiver(refreshReceiver, filter)
+        if (!isReceiverRegistered) {
+            val filter = IntentFilter("com.example.eventup.REFRESH_EVENTS")
+            context?.registerReceiver(refreshReceiver, filter)
+            isReceiverRegistered = true
+        }
+    }
+
+    private fun unregisterRefreshReceiver() {
+        if (isReceiverRegistered) {
+            context?.unregisterReceiver(refreshReceiver)
+            isReceiverRegistered = false
+        }
     }
 
     private val refreshReceiver = object : BroadcastReceiver() {

@@ -94,7 +94,7 @@ class EventsAdapter(
             updateFavoriteIcon(false)
             if (currentUser != null) {
                 CoroutineScope(Dispatchers.Main).launch {
-                    val isFavorite = FavoritesRepository.isEventFavorite(event.id, currentUser.uid)
+                    val isFavorite = FavoritesRepository.isEventFavorite(event.id.toString(), currentUser.uid)
                     updateFavoriteIcon(isFavorite)
                 }
             }
@@ -134,12 +134,12 @@ class EventsAdapter(
         }
 
         private suspend fun toggleFavorite(event: Event) {
-            val isFavorite = currentUser?.let { FavoritesRepository.isEventFavorite(event.id, it.uid) }
+            val isFavorite = currentUser?.let { FavoritesRepository.isEventFavorite(event.id.toString(), it.uid) }
             if (isFavorite == true) {
-                currentUser?.let { FavoritesRepository.removeEventFromFavorites(event.id, it.uid) }
+                currentUser?.let { FavoritesRepository.removeEventFromFavorites(event.id.toString(), it.uid) }
                 updateFavoriteIcon(false)
             } else {
-                currentUser?.let { FavoritesRepository.addEventToFavorites(event.id, it.uid) }
+                currentUser?.let { FavoritesRepository.addEventToFavorites(event.id.toString(), it.uid) }
                 updateFavoriteIcon(true)
             }
         }

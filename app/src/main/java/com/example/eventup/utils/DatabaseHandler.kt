@@ -11,7 +11,7 @@ import java.sql.SQLException
 
 object DatabaseHandler {
 
-    private const val URL = "jdbc:mysql://192.168.1.144:3306/eventup"
+    private const val URL = "jdbc:mysql://192.168.0.192:3306/eventup"
     private const val USER = "root"
     private const val PASSWORD = "root"
 

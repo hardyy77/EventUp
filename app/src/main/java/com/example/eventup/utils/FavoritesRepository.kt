@@ -17,7 +17,7 @@ object FavoritesRepository {
                 val favoriteEvents = mutableListOf<Event>()
                 while (resultSet.next()) {
                     val event = Event(
-                        id = resultSet.getString("id"),
+                        id = resultSet.getInt("id"),
                         name = resultSet.getString("name"),
                         location = resultSet.getString("location"),
                         date = resultSet.getString("date"),

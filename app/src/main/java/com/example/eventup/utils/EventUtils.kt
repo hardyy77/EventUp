@@ -14,7 +14,7 @@ object EventUtils {
 
         while (resultSet?.next() == true) {
             val event = Event(
-                id = resultSet.getString("id"),
+                id = resultSet.getInt("id"),
                 name = resultSet.getString("name"),
                 location = resultSet.getString("location"),
                 date = resultSet.getString("date"),
@@ -35,7 +35,7 @@ object EventUtils {
 
         while (resultSet?.next() == true) {
             val event = Event(
-                id = resultSet.getString("id"),
+                id = resultSet.getInt("id"),
                 name = resultSet.getString("name"),
                 location = resultSet.getString("location"),
                 date = resultSet.getString("date"),

@@ -4,36 +4,39 @@ import android.os.Parcel
 import android.os.Parcelable
 
 data class Event(
-    var id: String = "", // Ensure id is a var and has a default value
+    var id: Int = 0, // Ensure id is an Int
     val name: String = "",
     val location: String = "",
     val date: String = "",
     val genres: String = "",
     val description: String = "",
     var interest: Int = 0,
-    var isFavorite: Boolean = false // Dodane pole
+    var isFavorite: Boolean = false,
+    val addedDate: String = ""
 ) : Parcelable {
 
     constructor(parcel: Parcel) : this(
-        parcel.readString() ?: "",
+        parcel.readInt(), // Read as Int
         parcel.readString() ?: "",
         parcel.readString() ?: "",
         parcel.readString() ?: "",
         parcel.readString() ?: "",
         parcel.readString() ?: "",
         parcel.readInt(),
-        parcel.readByte() != 0.toByte() // Czytanie pola isFavorite z Parcel
+        parcel.readByte() != 0.toByte(),
+        parcel.readString() ?: ""
     )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
-        parcel.writeString(id)
+        parcel.writeInt(id) // Write as Int
         parcel.writeString(name)
         parcel.writeString(location)
         parcel.writeString(date)
         parcel.writeString(genres)
         parcel.writeString(description)
         parcel.writeInt(interest)
-        parcel.writeByte(if (isFavorite) 1 else 0) // Zapisywanie pola isFavorite do Parcel
+        parcel.writeByte(if (isFavorite) 1 else 0)
+        parcel.writeString(addedDate)
     }
 
     override fun describeContents(): Int {

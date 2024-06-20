@@ -123,7 +123,7 @@ class SearchFragment : Fragment() {
             // Sprawdź stan ulubionych w bazie danych
             Log.i("SearchFragment", "Checking current favorite state in the database for event: ${event.id}")
             val isFavoriteNow = withContext(Dispatchers.IO) {
-                currentUser?.let { FavoritesRepository.isEventFavorite(event.id, it.uid) }
+                currentUser?.let { FavoritesRepository.isEventFavorite(event.id.toString(), it.uid) }
             } ?: false
 
             // Zsynchronizuj UI jeśli stan się różni
@@ -137,13 +137,13 @@ class SearchFragment : Fragment() {
             // Wykonaj operację na ulubionych
             if (isFavoriteNow) {
                 withContext(Dispatchers.IO) {
-                    currentUser?.let { FavoritesRepository.removeEventFromFavorites(event.id, it.uid) }
+                    currentUser?.let { FavoritesRepository.removeEventFromFavorites(event.id.toString(), it.uid) }
                 }
                 Log.i("SearchFragment", "Removed event: ${event.id} from favorites")
                 event.isFavorite = false
             } else {
                 withContext(Dispatchers.IO) {
-                    currentUser?.let { FavoritesRepository.addEventToFavorites(event.id, it.uid) }
+                    currentUser?.let { FavoritesRepository.addEventToFavorites(event.id.toString(), it.uid) }
                 }
                 Log.i("SearchFragment", "Added event: ${event.id} to favorites")
                 event.isFavorite = true
@@ -172,7 +172,7 @@ class SearchFragment : Fragment() {
     private fun deleteEvent(event: Event) {
         CoroutineScope(Dispatchers.Main).launch {
             try {
-                withContext(Dispatchers.IO) { EventUtils.deleteEvent(event.id) }
+                withContext(Dispatchers.IO) { EventUtils.deleteEvent(event.id.toString()) }
                 sendRefreshBroadcast()
                 eventsAdapter.notifyDataSetChanged()
                 println("Deleted event: ${event.id}")
@@ -212,7 +212,7 @@ class SearchFragment : Fragment() {
                     }
                 }
                 events.forEach { event ->
-                    event.isFavorite = favoriteEventIds.contains(event.id)
+                    event.isFavorite = favoriteEventIds.contains(event.id.toString())
                 }
                 eventsAdapter.submitList(events)
                 onComplete()

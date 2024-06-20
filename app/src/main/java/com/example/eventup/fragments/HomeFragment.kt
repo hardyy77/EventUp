@@ -13,12 +13,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.work.Constraints
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
-import com.example.eventup.R
+import androidx.work.*
 import com.example.eventup.activities.EventDetailsActivity
 import com.example.eventup.activities.ManageEventActivity
 import com.example.eventup.adapters.EventsAdapter
@@ -42,6 +37,7 @@ class HomeFragment : Fragment() {
 
     private lateinit var interestingEventsAdapter: EventsAdapter
     private lateinit var popularEventsAdapter: EventsAdapter
+    private lateinit var newestEventsAdapter: EventsAdapter
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
     private var isReceiverRegistered = false
@@ -56,6 +52,7 @@ class HomeFragment : Fragment() {
         lifecycleScope.launch {
             fetchInterestingEvents()
             fetchPopularEvents()
+            fetchNewestEvents()
         }
 
         registerRefreshReceiver()
@@ -89,6 +86,15 @@ class HomeFragment : Fragment() {
             onDeleteClick = { event -> deleteEvent(event) }
         )
         binding.popularRecyclerView.adapter = popularEventsAdapter
+
+        binding.newestRecyclerView.layoutManager = LinearLayoutManager(context)
+        newestEventsAdapter = EventsAdapter(
+            onClick = { event -> navigateToEventDetails(event) },
+            onFavoriteClick = { event -> toggleFavorite(event, false) },
+            onEditClick = { event -> editEvent(event) },
+            onDeleteClick = { event -> deleteEvent(event) }
+        )
+        binding.newestRecyclerView.adapter = newestEventsAdapter
     }
 
     private suspend fun fetchInterestingEvents() {
@@ -100,7 +106,7 @@ class HomeFragment : Fragment() {
             try {
                 while (resultSet.next()) {
                     val event = Event(
-                        id = resultSet.getString("id"),
+                        id = resultSet.getInt("id"),
                         name = resultSet.getString("name"),
                         location = resultSet.getString("location"),
                         date = resultSet.getString("date"),
@@ -135,7 +141,7 @@ class HomeFragment : Fragment() {
             try {
                 while (resultSet.next()) {
                     val event = Event(
-                        id = resultSet.getString("id"),
+                        id = resultSet.getInt("id"),
                         name = resultSet.getString("name"),
                         location = resultSet.getString("location"),
                         date = resultSet.getString("date"),
@@ -159,6 +165,42 @@ class HomeFragment : Fragment() {
         }
 
         syncEvents(events, popularEventsAdapter)
+    }
+
+    private suspend fun fetchNewestEvents() {
+        val query = "SELECT * FROM events ORDER BY added_date DESC LIMIT 4"
+        val resultSet = withContext(Dispatchers.IO) { DatabaseHandler.executeQuery(query) }
+        val events = mutableListOf<Event>()
+
+        if (resultSet != null) {
+            try {
+                while (resultSet.next()) {
+                    val event = Event(
+                        id = resultSet.getInt("id"),
+                        name = resultSet.getString("name"),
+                        location = resultSet.getString("location"),
+                        date = resultSet.getString("date"),
+                        genres = resultSet.getString("genres"),
+                        description = resultSet.getString("description"),
+                        interest = resultSet.getInt("interest"),
+                        addedDate = resultSet.getString("added_date")
+                    )
+                    events.add(event)
+                }
+            } catch (e: SQLException) {
+                e.printStackTrace()
+            } finally {
+                try {
+                    resultSet.close()
+                } catch (e: SQLException) {
+                    e.printStackTrace()
+                }
+            }
+        } else {
+            Log.e("HomeFragment", "Failed to fetch newest events: resultSet is null")
+        }
+
+        syncEvents(events, newestEventsAdapter)
     }
 
     private fun navigateToEventDetails(event: Event) {
@@ -187,13 +229,11 @@ class HomeFragment : Fragment() {
 
     private suspend fun handleFavoriteToggle(event: Event, adapter: EventsAdapter, position: Int) {
         try {
-            // Sprawdź stan ulubionych w bazie danych
             Log.i("HomeFragment", "Checking current favorite state in the database for event: ${event.id}")
             val isFavoriteNow = withContext(Dispatchers.IO) {
-                currentUser?.let { FavoritesRepository.isEventFavorite(event.id, it.uid) }
+                currentUser?.let { FavoritesRepository.isEventFavorite(event.id.toString(), it.uid) }
             } ?: false
 
-            // Zsynchronizuj UI jeśli stan się różni
             if (isFavoriteNow != event.isFavorite) {
                 Log.i("HomeFragment", "Mismatch between UI and database state. Syncing UI with database.")
                 event.isFavorite = isFavoriteNow
@@ -201,16 +241,15 @@ class HomeFragment : Fragment() {
                 return
             }
 
-            // Wykonaj operację na ulubionych
             if (isFavoriteNow) {
                 withContext(Dispatchers.IO) {
-                    currentUser?.let { FavoritesRepository.removeEventFromFavorites(event.id, it.uid) }
+                    currentUser?.let { FavoritesRepository.removeEventFromFavorites(event.id.toString(), it.uid) }
                 }
                 Log.i("HomeFragment", "Removed event: ${event.id} from favorites")
                 event.isFavorite = false
             } else {
                 withContext(Dispatchers.IO) {
-                    currentUser?.let { FavoritesRepository.addEventToFavorites(event.id, it.uid) }
+                    currentUser?.let { FavoritesRepository.addEventToFavorites(event.id.toString(), it.uid) }
                 }
                 Log.i("HomeFragment", "Added event: ${event.id} to favorites")
                 event.isFavorite = true
@@ -231,7 +270,7 @@ class HomeFragment : Fragment() {
     private fun deleteEvent(event: Event) {
         lifecycleScope.launch {
             try {
-                EventUtils.deleteEvent(event.id)
+                EventUtils.deleteEvent(event.id.toString())
                 sendRefreshBroadcast()
                 updateUI()
             } catch (e: Exception) {
@@ -244,6 +283,7 @@ class HomeFragment : Fragment() {
         lifecycleScope.launch {
             fetchPopularEvents()
             fetchInterestingEvents()
+            fetchNewestEvents()
         }
     }
 
@@ -297,14 +337,14 @@ class HomeFragment : Fragment() {
             try {
                 val favoriteEventIds = if (currentUser != null) {
                     withContext(Dispatchers.IO) {
-                        FavoritesRepository.getUserEventIds(currentUser.uid.toString())
+                        FavoritesRepository.getUserEventIds(currentUser.uid)
                     }
                 } else {
                     emptyList()
                 }
                 adapter.submitList(events.map { event ->
                     event.copy().apply {
-                        isFavorite = favoriteEventIds.contains(id)
+                        isFavorite = favoriteEventIds.contains(id.toString())
                     }
                 })
             } catch (e: Exception) {
