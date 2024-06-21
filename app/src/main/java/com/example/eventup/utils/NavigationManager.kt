@@ -1,5 +1,6 @@
 package com.example.eventup.utils
 
+import android.util.Log
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
@@ -12,6 +13,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 
 object NavigationManager {
 
+    // Funkcja konfigurująca dolną nawigację
     fun setupBottomNavigation(
         fragmentManager: FragmentManager,
         bottomNavigationView: BottomNavigationView,
@@ -37,18 +39,24 @@ object NavigationManager {
                     selectedFragment = ProfileFragment()
                     title = "Profil"
                 }
+                else -> {
+                    Log.e("NavigationManager", "Unknown navigation item selected: ${item.itemId}")
+                }
             }
             if (selectedFragment != null && title != null) {
                 fragmentManager.beginTransaction().replace(R.id.container, selectedFragment).commit()
                 fragmentTitle.text = title
+                Log.d("NavigationManager", "Switched to fragment: $title")
             }
             true
         }
 
+        // Inicjalizacja nawigacji z domyślnym fragmentem
         if (fragmentManager.findFragmentById(R.id.container) == null) {
             fragmentManager.beginTransaction().replace(R.id.container, HomeFragment()).commit()
             fragmentTitle.text = "Główna"
             bottomNavigationView.selectedItemId = R.id.navigation_home
+            Log.d("NavigationManager", "Initialized with HomeFragment")
         }
     }
 }

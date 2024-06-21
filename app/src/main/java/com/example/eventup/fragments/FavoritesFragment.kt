@@ -27,58 +27,67 @@ import kotlinx.coroutines.sync.withLock
 
 class FavoritesFragment : Fragment() {
 
+    // Deklaracja zmiennych globalnych dla fragmentu
     private lateinit var binding: FragmentFavoritesBinding
     private lateinit var eventAdapter: EventsAdapter
     private var favoriteEvents = mutableListOf<Event>()
     private var userId: String? = null
-    private val mutex = Mutex()
-    private var isReceiverRegistered = false
+    private val mutex = Mutex() // Mutex używany do synchronizacji operacji na ulubionych wydarzeniach
+    private var isReceiverRegistered = false // Flaga do śledzenia, czy odbiornik jest zarejestrowany
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    // Funkcja tworząca widok fragmentu
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        // Inicjalizacja widoku za pomocą View Binding
         binding = FragmentFavoritesBinding.inflate(inflater, container, false)
         val recyclerView = binding.recyclerViewFavorites
         val loginPrompt: TextView = binding.loginPrompt
 
+        // Pobieranie ID aktualnie zalogowanego użytkownika
         userId = UserUtils.getCurrentUserId()?.toString()
 
+        // Sprawdzanie, czy użytkownik jest zalogowany
         if (userId == null) {
-            recyclerView.visibility = View.GONE
-            loginPrompt.visibility = View.VISIBLE
+            recyclerView.visibility = View.GONE // Ukrywanie listy ulubionych wydarzeń
+            loginPrompt.visibility = View.VISIBLE // Pokazywanie informacji o konieczności zalogowania się
         } else {
             recyclerView.visibility = View.VISIBLE
             loginPrompt.visibility = View.GONE
-            recyclerView.layoutManager = LinearLayoutManager(context)
+            recyclerView.layoutManager = LinearLayoutManager(context) // Ustawianie menedżera layoutu dla RecyclerView
+            // Inicjalizacja adaptera z ustawieniem akcji na kliknięcia
             eventAdapter = EventsAdapter(
                 onClick = { event -> navigateToEventDetails(event) },
                 onFavoriteClick = { event -> toggleFavorite(event) },
                 onEditClick = { event -> editEvent(event) },
                 onDeleteClick = { event -> deleteEvent(event) }
             )
-            recyclerView.adapter = eventAdapter
-            loadFavoriteEvents()
+            recyclerView.adapter = eventAdapter // Ustawienie adaptera do RecyclerView
+            loadFavoriteEvents() // Załadowanie ulubionych wydarzeń
         }
-        registerRefreshReceiver()
+        registerRefreshReceiver() // Rejestracja odbiornika do odświeżania listy wydarzeń
         return binding.root
     }
 
+    // Funkcja czyszcząca zasoby przy niszczeniu widoku
     override fun onDestroyView() {
         super.onDestroyView()
-        unregisterRefreshReceiver()
+        unregisterRefreshReceiver() // Wyrejestrowanie odbiornika
     }
 
+    // Funkcja ładująca ulubione wydarzenia
     private fun loadFavoriteEvents() {
         lifecycleScope.launch {
-            favoriteEvents.clear()
+            favoriteEvents.clear() // Czyszczenie listy ulubionych wydarzeń
             userId?.let { id ->
-                favoriteEvents.addAll(FavoritesRepository.getFavorites(id))
+                favoriteEvents.addAll(FavoritesRepository.getFavorites(id)) // Pobieranie ulubionych wydarzeń z repozytorium
             }
-            eventAdapter.submitList(favoriteEvents.toList())
+            eventAdapter.submitList(favoriteEvents.toList()) // Aktualizacja listy w adapterze
         }
     }
 
+    // Funkcja przełączająca stan ulubionego wydarzenia
     private fun toggleFavorite(event: Event) {
-        val isCurrentlyFavorite = favoriteEvents.contains(event)
-        val position = favoriteEvents.indexOf(event)
+        val isCurrentlyFavorite = favoriteEvents.contains(event) // Sprawdzanie, czy wydarzenie jest obecnie ulubione
+        val position = favoriteEvents.indexOf(event) // Pobieranie pozycji wydarzenia na liście
 
         lifecycleScope.launch {
             mutex.withLock {
@@ -121,31 +130,35 @@ class FavoritesFragment : Fragment() {
         }
     }
 
+    // Funkcja nawigująca do szczegółów wydarzenia
     private fun navigateToEventDetails(event: Event) {
         val intent = Intent(context, EventDetailsActivity::class.java)
         intent.putExtra("event", event)
         startActivity(intent)
     }
 
+    // Funkcja nawigująca do edycji wydarzenia
     private fun editEvent(event: Event) {
         val intent = Intent(context, ManageEventActivity::class.java)
         intent.putExtra("EVENT_ID", event.id)
         startActivity(intent)
     }
 
+    // Funkcja usuwająca wydarzenie
     private fun deleteEvent(event: Event) {
         lifecycleScope.launch {
             try {
-                EventUtils.deleteEvent(event.id.toString())
-                loadFavoriteEvents()
-                eventAdapter.notifyDataSetChanged()
-                context?.sendBroadcast(Intent("com.example.eventup.REFRESH_EVENTS"))
+                EventUtils.deleteEvent(event.id.toString()) // Usuwanie wydarzenia za pomocą narzędzia EventUtils
+                loadFavoriteEvents() // Odświeżenie listy ulubionych wydarzeń
+                eventAdapter.notifyDataSetChanged() // Powiadomienie adaptera o zmianach
+                context?.sendBroadcast(Intent("com.example.eventup.REFRESH_EVENTS")) // Wysłanie broadcastu do odświeżenia listy wydarzeń
             } catch (e: Exception) {
-                println("Failed to delete event: ${e.message}")
+                Log.e("FavoritesFragment", "Failed to delete event: ${e.message}", e)
             }
         }
     }
 
+    // Funkcja rejestrująca odbiornik do odświeżania listy wydarzeń
     private fun registerRefreshReceiver() {
         if (!isReceiverRegistered) {
             val filter = IntentFilter("com.example.eventup.REFRESH_EVENTS")
@@ -154,6 +167,7 @@ class FavoritesFragment : Fragment() {
         }
     }
 
+    // Funkcja wyrejestrowująca odbiornik
     private fun unregisterRefreshReceiver() {
         if (isReceiverRegistered) {
             context?.unregisterReceiver(refreshReceiver)
@@ -161,6 +175,7 @@ class FavoritesFragment : Fragment() {
         }
     }
 
+    // Odbiornik do odświeżania listy wydarzeń
     private val refreshReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             Log.d("FavoritesFragment", "Received broadcast to refresh events")

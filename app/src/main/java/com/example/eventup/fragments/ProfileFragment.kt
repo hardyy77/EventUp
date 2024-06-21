@@ -27,6 +27,7 @@ import kotlinx.coroutines.withContext
 
 class ProfileFragment : Fragment() {
 
+    // Deklaracja widoków i zmiennych używanych w fragmencie
     private lateinit var userEmailTextView: TextView
     private lateinit var userUidTextView: TextView
     private lateinit var loginLogoutButton: Button
@@ -35,16 +36,20 @@ class ProfileFragment : Fragment() {
     private var currentUser: User? = null
     private lateinit var loginReceiver: BroadcastReceiver
 
+    // Funkcja tworząca widok fragmentu
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_profile, container, false)
+
+        // Inicjalizacja widoków
         userEmailTextView = view.findViewById(R.id.userEmailTextView)
         userUidTextView = view.findViewById(R.id.userUidTextView)
         loginLogoutButton = view.findViewById(R.id.loginLogoutButton)
         addEventButton = view.findViewById(R.id.addEventButton)
 
+        // Inicjalizacja rejestratora aktywności dla wyniku logowania
         loginActivityResultLauncher = registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) { result ->
@@ -53,6 +58,7 @@ class ProfileFragment : Fragment() {
             }
         }
 
+        // Ustawienie akcji dla przycisku logowania/wylogowania
         loginLogoutButton.setOnClickListener {
             if (currentUser != null) {
                 UserUtils.logoutUser()
@@ -63,15 +69,18 @@ class ProfileFragment : Fragment() {
             }
         }
 
+        // Ustawienie akcji dla przycisku dodawania wydarzenia
         addEventButton.setOnClickListener {
             startActivity(Intent(activity, ManageEventActivity::class.java))
         }
 
+        // Sprawdzenie, czy użytkownik jest zalogowany
         checkIfUserLoggedIn()
 
         return view
     }
 
+    // Rejestracja odbiornika broadcastu po rozpoczęciu fragmentu
     override fun onStart() {
         super.onStart()
         loginReceiver = object : BroadcastReceiver() {
@@ -82,17 +91,20 @@ class ProfileFragment : Fragment() {
         activity?.registerReceiver(loginReceiver, IntentFilter("com.example.eventup.LOGIN_SUCCESS"))
     }
 
+    // Wyrejestrowanie odbiornika broadcastu po zatrzymaniu fragmentu
     override fun onStop() {
         super.onStop()
         activity?.unregisterReceiver(loginReceiver)
     }
 
+    // Funkcja sprawdzająca, czy użytkownik jest zalogowany
     private fun checkIfUserLoggedIn() {
         currentUser = UserUtils.getCurrentUser()
         Log.d("ProfileFragment", "Check if user logged in: $currentUser")
         updateUI(currentUser)
     }
 
+    // Funkcja aktualizująca interfejs użytkownika w zależności od stanu zalogowania
     private fun updateUI(user: User?) {
         if (user != null) {
             userEmailTextView.text = "Email: ${user.email}"
@@ -115,21 +127,26 @@ class ProfileFragment : Fragment() {
         }
     }
 
+    // Funkcja pobierająca rolę użytkownika z bazy danych
     private fun fetchUserRole(userId: String) {
         CoroutineScope(Dispatchers.Main).launch {
-            val query = "SELECT role FROM users WHERE uid = $userId"
-            val resultSet = withContext(Dispatchers.IO) {
-                DatabaseHandler.executeQuery(query)
-            }
-            if (resultSet?.next() == true) {
-                val role = resultSet.getString("role")
-                if (role == "admin") {
-                    addEventButton.visibility = View.VISIBLE
+            try {
+                val query = "SELECT role FROM users WHERE uid = '$userId'"
+                val resultSet = withContext(Dispatchers.IO) {
+                    DatabaseHandler.executeQuery(query)
+                }
+                if (resultSet?.next() == true) {
+                    val role = resultSet.getString("role")
+                    if (role == "admin") {
+                        addEventButton.visibility = View.VISIBLE
+                    } else {
+                        addEventButton.visibility = View.GONE
+                    }
                 } else {
                     addEventButton.visibility = View.GONE
                 }
-            } else {
-                addEventButton.visibility = View.GONE
+            } catch (e: Exception) {
+                Log.e("ProfileFragment", "Failed to fetch user role: ${e.message}", e)
             }
         }
     }

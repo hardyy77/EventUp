@@ -11,12 +11,14 @@ import java.sql.SQLException
 
 object DatabaseHandler {
 
+    // Stałe zawierające dane połączenia z bazą danych
     private const val URL = "jdbc:mysql://192.168.0.192:3306/eventup"
     private const val USER = "root"
     private const val PASSWORD = "root"
 
     init {
         try {
+            // Rejestracja sterownika JDBC MySQL
             Class.forName("com.mysql.cj.jdbc.Driver")
             println("MySQL JDBC Driver Registered")
         } catch (e: ClassNotFoundException) {
@@ -25,10 +27,12 @@ object DatabaseHandler {
         }
     }
 
+    // Funkcja inicjalizująca, pozostawiona pusta celowo
     fun init() {
-        // This method is intentionally left empty to be called for initialization purposes
+        // Celowa pozostawiona pusta metoda aby można było ją wywołać w celu inicjalizacji w MainActivity
     }
 
+    // Funkcja uzyskująca połączenie z bazą danych
     private fun getConnection(): Connection? {
         println("Connecting to database...")
         return try {
@@ -42,6 +46,7 @@ object DatabaseHandler {
         }
     }
 
+    // Funkcja wykonująca zapytanie SQL w trybie asynchronicznym
     suspend fun executeQuery(query: String): ResultSet? = withContext(Dispatchers.IO) {
         val connection: Connection?
         var resultSet: ResultSet? = null
@@ -58,6 +63,7 @@ object DatabaseHandler {
         resultSet
     }
 
+    // Funkcja wykonująca aktualizację SQL w trybie asynchronicznym
     suspend fun executeUpdate(query: String): Int = withContext(Dispatchers.IO) {
         var result = 0
         var connection: Connection? = null
@@ -77,50 +83,7 @@ object DatabaseHandler {
         result
     }
 
-    suspend fun getUserId(email: String): String? = withContext(Dispatchers.IO) {
-        val query = "SELECT id FROM users WHERE email = '$email'"
-        var connection: Connection? = null
-        var resultSet: ResultSet? = null
-        var userId: String? = null
-        try {
-            connection = getConnection()
-            if (connection != null) {
-                resultSet = executeQuery(query)
-                if (resultSet != null && resultSet.next()) {
-                    userId = resultSet.getString("id")
-                }
-            }
-        } catch (e: SQLException) {
-            e.printStackTrace()
-        } finally {
-            resultSet?.close()
-            connection?.close()
-        }
-        userId
-    }
-
-    suspend fun getUserRole(userId: Int): String? = withContext(Dispatchers.IO) {
-        val query = "SELECT role FROM users WHERE uid = $userId"
-        var role: String? = null
-        var connection: Connection? = null
-        var resultSet: ResultSet? = null
-        try {
-            connection = getConnection()
-            if (connection != null) {
-                resultSet = executeQuery(query)
-                if (resultSet != null && resultSet.next()) {
-                    role = resultSet.getString("role")
-                }
-            }
-        } catch (e: SQLException) {
-            e.printStackTrace()
-        } finally {
-            resultSet?.close()
-            connection?.close()
-        }
-        role
-    }
-
+    // Funkcja weryfikująca użytkownika na podstawie email i hasła
     suspend fun verifyUser(email: String, password: String): Boolean = withContext(Dispatchers.IO) {
         val query = "SELECT * FROM users WHERE email = '$email' AND password = '$password'"
         var connection: Connection? = null
@@ -144,6 +107,7 @@ object DatabaseHandler {
         isValidUser
     }
 
+    // Funkcja uzyskująca użytkownika na podstawie adresu email
     suspend fun getUserByEmail(email: String): User? = withContext(Dispatchers.IO) {
         val query = "SELECT * FROM users WHERE email = '$email'"
         var connection: Connection? = null

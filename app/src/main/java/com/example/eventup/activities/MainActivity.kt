@@ -1,6 +1,7 @@
 package com.example.eventup.activities
 
 import android.os.Bundle
+import android.util.Log
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.eventup.utils.NavigationManager
@@ -11,21 +12,34 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class MainActivity : AppCompatActivity() {
 
+    // Funkcja wywoływana przy tworzeniu aktywności.
+    // Odpowiada za inicjalizację widoku oraz ustawienie dolnej nawigacji.
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Initialize DatabaseHandler to ensure connection is established
-        DatabaseHandler.init()
+        try {
+            // Inicjalizacja DatabaseHandler, aby zapewnić nawiązanie połączenia z bazą danych
+            DatabaseHandler.init()
+            Log.d("MainActivity", "DatabaseHandler initialized successfully")
 
-        val fragmentTitle = findViewById<TextView>(R.id.fragment_title)
-        val bottomNavigation = findViewById<BottomNavigationView>(R.id.bottom_navigation)
+            val fragmentTitle = findViewById<TextView>(R.id.fragment_title)
+            val bottomNavigation = findViewById<BottomNavigationView>(R.id.bottom_navigation)
 
-        NavigationManager.setupBottomNavigation(
-            supportFragmentManager,
-            bottomNavigation,
-            fragmentTitle
-        )
-        TaskScheduler.scheduleDailyTask(this)
+            // Ustawienie dolnej nawigacji
+            NavigationManager.setupBottomNavigation(
+                supportFragmentManager,
+                bottomNavigation,
+                fragmentTitle
+            )
+            Log.d("MainActivity", "Bottom navigation setup successfully")
+
+            // Harmonogramowanie codziennych zadań
+            TaskScheduler.scheduleDailyTask(this)
+            Log.d("MainActivity", "Daily tasks scheduled successfully")
+        } catch (e: Exception) {
+            Log.e("MainActivity", "Error during initialization: ${e.message}", e)
+        }
     }
 }
