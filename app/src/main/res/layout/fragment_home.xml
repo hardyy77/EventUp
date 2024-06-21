@@ -59,6 +59,7 @@
             android:clipChildren="false"
             android:minHeight="565sp"/>
 
+        <!-- Ostatnio dodane -->
         <TextView
             android:id="@+id/newest_label"
             android:layout_width="wrap_content"
@@ -68,5 +69,17 @@
             android:textStyle="bold"
             android:textColor="@color/white"
             android:layout_marginBottom="8dp" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/newest_recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:overScrollMode="never"
+            android:scrollbars="none"
+            android:clipToPadding="false"
+            android:paddingEnd="8dp"
+            android:paddingStart="8dp"
+            android:clipChildren="false" />
+
     </LinearLayout>
 </ScrollView>

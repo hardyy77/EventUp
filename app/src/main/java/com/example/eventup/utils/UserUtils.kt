@@ -1,5 +1,6 @@
 package com.example.eventup.utils
 
+import android.util.Log
 import com.example.eventup.models.Event
 import com.example.eventup.models.User
 import kotlinx.coroutines.Dispatchers
@@ -9,42 +10,26 @@ object UserUtils {
 
     private var currentUser: User? = null
 
+    // Funkcja zwracająca ID aktualnie zalogowanego użytkownika
     fun getCurrentUserId(): String? {
         return currentUser?.uid
     }
 
+    // Funkcja zwracająca aktualnie zalogowanego użytkownika
     fun getCurrentUser(): User? {
         return currentUser
     }
 
+    // Funkcja ustawiająca aktualnie zalogowanego użytkownika
     fun setCurrentUser(user: User) {
         currentUser = user
+        Log.d("UserUtils", "Current user set to: ${user.uid}")
     }
 
+    // Funkcja wylogowująca użytkownika
     fun logoutUser() {
+        Log.d("UserUtils", "User ${currentUser?.uid} logged out")
         currentUser = null
     }
 
-//    suspend fun getFavoriteEvents(userId: String, callback: (List<Event>) -> Unit) = withContext(
-//        Dispatchers.IO) {
-//        val query = "SELECT events.* FROM events JOIN favorites ON events.id = favorites.event_id WHERE favorites.user_id = $userId"
-//        val resultSet = DatabaseHandler.executeQuery(query)
-//        val events = mutableListOf<Event>()
-//
-//        while (resultSet?.next() == true) {
-//            val event = Event(
-//                id = resultSet.getInt("id").toString(),
-//                name = resultSet.getString("name"),
-//                location = resultSet.getString("location"),
-//                date = resultSet.getString("date"),
-//                genres = resultSet.getString("genres"),
-//                description = resultSet.getString("description"),
-//                interest = resultSet.getInt("interest")
-//            )
-//            events.add(event)
-//        }
-//        withContext(Dispatchers.Main) {
-//            callback(events)
-//        }
-//    }
 }
