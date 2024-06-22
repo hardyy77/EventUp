@@ -111,13 +111,13 @@ class ProfileFragment : Fragment() {
             userUidTextView.text = "UID: ${user.uid}"
             userEmailTextView.visibility = View.VISIBLE
             userUidTextView.visibility = View.VISIBLE
-            loginLogoutButton.text = "Logout"
+            loginLogoutButton.text = "Wyloguj"
             loginLogoutButton.visibility = View.VISIBLE
             fetchUserRole(user.uid)
         } else {
             userEmailTextView.visibility = View.GONE
             userUidTextView.visibility = View.GONE
-            loginLogoutButton.text = "Login"
+            loginLogoutButton.text = "Zaloguj"
             loginLogoutButton.visibility = View.VISIBLE
             addEventButton.visibility = View.GONE
             loginLogoutButton.setOnClickListener {

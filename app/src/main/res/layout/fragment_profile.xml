@@ -37,7 +37,7 @@
         android:layout_marginTop="16dp"
         android:textColor="@color/white"
         android:background="@drawable/button_background"
-        android:text="Login"/>
+        android:text="Zaloguj"/>
 
     <Button
         android:id="@+id/addEventButton"
@@ -47,6 +47,6 @@
         android:layout_marginTop="16dp"
         android:textColor="@color/white"
         android:background="@drawable/button_background"
-        android:text="Add Event"
+        android:text="Dodaj wydarzenie"
         android:visibility="gone"/>
 </RelativeLayout>
